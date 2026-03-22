@@ -1,0 +1,135 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribuição / empacotamento
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Logs e relatórios
+pip-log.txt
+pip-delete-this-directory.txt
+*.log
+
+# Testes / cobertura
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Ambiente virtual
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Configurações de IDEs / editores
+.vscode/
+.vs/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Arquivos temporários
+*.swp
+*.swo
+*~
+*.tmp
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Arquivos de configuração local
+*.env
+*.local
+
+# Banco de dados local
+*.sqlite3
+*.db
+
+# Cache do Python
+__pypackages__/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pyright
+.pyright/
+
+# Ruff
+.ruff_cache/
+
+# Pylint
+.pylint.d/
+
+# arquivos de build do setuptools
+*.egg-info/
+
+# arquivos de distribuição
+dist/
+build/
+
+# arquivos de profiling
+.prof
+
+# arquivos de cobertura adicionais
+coverage/
+
+# arquivos de docker (opcional)
+*.pid
+*.seed
+*.pid.lock
+
+# arquivos de secrets
+secrets.json
+config/secrets.yml
+
+# arquivos de testes locais
+.local/
+
+# arquivos de backup
+*.bak
+*.backup
