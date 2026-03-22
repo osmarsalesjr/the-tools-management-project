@@ -6,11 +6,11 @@ FAILED_COLOR_REASON = "COR DA PEÇA NÃO SEGUE OS PADRÕES DE QUALIDADE."
 FAILED_LENGTH_REASON = "COMPRIMENTO DA PEÇA NÃO SEGUE OS PADRÕES DE QUALIDADE."
 
 
-def main():
+def main() -> None:
     pass
 
 
-def id_exists(tools: list, id: int):
+def id_exists(tools: list[dict], id: int) -> bool:
 
     if tools is None or len(tools) == 0:
         return False
@@ -23,10 +23,10 @@ def id_exists(tools: list, id: int):
         return False
 
 
-def process_tool_validation(tool: dict):
+def process_tool_validation(tool: dict) -> dict:
 
     if tool is None:
-        return
+        return tool
 
     weight = tool["weight"]
     color = str(tool["color"])
@@ -47,6 +47,8 @@ def process_tool_validation(tool: dict):
     else:
         tool["status"] = FAILED_STATUS
         tool["failed_reasons"] = failed_reasons
+    
+    return tool
 
 
 if __name__ == "__main__":

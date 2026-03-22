@@ -4,23 +4,21 @@ TOOL_ID_INPUT_TEXT = "\nDigite a identificação numérica da peça: "
 TOOL_ID_EXISTS_OUTPUT_TEXT = "A identificação da peça digitada já está cadastrada."
 
 TOOL_WEIGHT_INPUT_TEXT = "\nDigite o peso em gramas (g) da peça: "
-
 TOOL_COLOR_INPUT_TEXT = "\nEscolha o número da cor da peça: "
 TOOL_COLOR_NOT_FOUND_OUTPUT_TEXT = (
     "A número da cor escolhida não foi encontrada. Tente novamente."
 )
-
 TOOL_LENGTH_INPUT_TEXT = "\nDigite o comprimento em centímetro (cm) da peça: "
 
 TOOL_INT_VALUE_ERROR_EXCEPTION_OUTPUT_TEXT = "Erro! O valor deve ser numérico."
 TOOL_EXCEPTION_OUTPUT_TEXT = "Erro inesperado! Tente novamente."
 
 
-def main():
+def main() -> None:
     pass
 
 
-def int_input(input_text: str):
+def int_input(input_text: str) -> int:
     while True:
         try:
             id = int(input(input_text))
@@ -31,7 +29,7 @@ def int_input(input_text: str):
             print(TOOL_EXCEPTION_OUTPUT_TEXT)
 
 
-def create_tool(tools: list):
+def create_tool(tools: list[dict]) -> dict:
     id = id_input(tools)
     weight = int_input(TOOL_WEIGHT_INPUT_TEXT)
     color = color_input()
@@ -46,11 +44,10 @@ def create_tool(tools: list):
         "failed_reasons": [],
     }
 
-    process_tool_validation(tool)
-    return tool
+    return process_tool_validation(tool)
 
 
-def id_input(tools: list):
+def id_input(tools: list[dict]) -> int:
 
     while True:
         id = int_input(TOOL_ID_INPUT_TEXT)
@@ -61,7 +58,7 @@ def id_input(tools: list):
             return id
 
 
-def color_input():
+def color_input() -> str:
 
     colors = [
         {"id": 1, "nome": "Preto"},
@@ -80,7 +77,7 @@ def color_input():
         try:
             show_colors(colors)
             color_id = int(input(TOOL_COLOR_INPUT_TEXT))
-            color = str(get_color(color_id, colors))
+            color = get_color(color_id, colors)
 
             if color is None:
                 print(TOOL_COLOR_NOT_FOUND_OUTPUT_TEXT)
@@ -92,14 +89,14 @@ def color_input():
             print(TOOL_EXCEPTION_OUTPUT_TEXT)
 
 
-def show_colors(colors: list):
+def show_colors(colors: list[dict]) -> None:
 
-    print((">" * 5) + " Cores " + ("<" * 5))
+    print((">" * 10) + " Cores " + ("<" * 10))
     for color in colors:
         print(f"{color["id"]}. {color["nome"]}")
 
 
-def get_color(color_id: int, colors: list):
+def get_color(color_id: int, colors: list[dict]) -> str:
 
     colors_map = {color["id"]: color["nome"] for color in colors}
     return colors_map.get(color_id)
