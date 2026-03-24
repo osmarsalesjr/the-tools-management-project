@@ -24,7 +24,7 @@ def add_tool_to_box(boxes: list[list[dict]], new_tool: dict) -> None:
 
     for box in boxes:
         if len(box) >= 10:
-            pass
+            continue
         else:
             box.append(new_tool)
             is_new_tool_added = True
