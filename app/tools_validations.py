@@ -15,12 +15,12 @@ def id_exists(tools: list[dict], id: int) -> bool:
     if tools is None or len(tools) == 0:
         return False
 
-    tools_ids = [tool["id"] for tool in tools]
+    tools_ids = [tool["id"] for tool in tools if tool["id"] == id]
 
-    if id in tools_ids:
+    if len(tools_ids) != 0:
         return True
-    else:
-        return False
+    
+    return False
 
 
 def process_tool_validation(tool: dict) -> dict:
