@@ -1,56 +1,60 @@
-from tools_operations import create_tool
-from boxes_operations import add_tool_to_box
+from operacoes_pecas import criar_peca
+from operacoes_caixas import adicionar_peca_a_caixa, criar_caixas_com_lista_de_pecas
+from massa_dados_testes import pegar_lista_pecas
 
-MENU_INPUT_TEXT = "\nDigite a opção desejada: "
-MENU_INVALID_OPTION_OUTPUT_TEXT = "Opção inválida!"
+TEXTO_ENTRADA_MENU_PRINCIPAL = "\nDigite a opção desejada: "
+TEXTO_SAIDA_ALERTA_OPCAO_INVALIDA = "Opção inválida!"
 
-APPLICATION_ENDED_OUTPUT_TEXT = "Programa encerrado pelo usuário.\n"
-PAUSE_INPUT_TEXT = "Pressione ENTER para continuar..."
+TEXTO_SAIDA_PROGRAMA_ENCERRADO = "Programa encerrado pelo usuário.\n"
+TEXTO_SAIDA_PAUSA_PROGRAMA = "Pressione ENTER para continuar..."
 
-TOOL_ADDED_SUCCESSFULLY_OUTPUT_TEXT = "\nPeça cadastrada com sucesso!"
+TEXTO_SAIDA_PECA_ADICIONADA_COM_SUCESSO = "\nPeça cadastrada com sucesso!"
 
-N_BOXES_FOUND_OUTPUT_TEXT = "QUANTIDADE DE CAIXAS ENCONTRADAS: "
-
-NO_BOXES_CREATED_OUTPUT_TEXT = "\nNão há caixas criadas."
-NO_TOOLS_CREATED_OUTPUT_TEXT = "\nNão há peças cadastradas."
+TEXTO_SAIDA_NUMERO_CAIXAS_ENCONTRADAS = "QUANTIDADE DE CAIXAS ENCONTRADAS: "
+TEXTO_SAIDA_NAO_HA_CAIXAS_CRIADAS = "\nNão há caixas criadas."
+TEXTO_SAIDA_NAO_PECAS_CADASTRADAS = "\nNão há peças cadastradas."
 
 
 def main() -> None:
 
-    tools = []
-    boxes = []
+    # pecas = [] comecar lista com zerada
+    pecas = pegar_lista_pecas()
+    caixas = []
+
+    # atualizar lista de caixas com massa de testes
+    criar_caixas_com_lista_de_pecas(pecas, caixas)
 
     while True:
 
-        show_menu()
-        option = input(MENU_INPUT_TEXT)
+        imprimir_menu()
+        option = input(TEXTO_ENTRADA_MENU_PRINCIPAL)
 
         match option:
             case "0":
-                print(APPLICATION_ENDED_OUTPUT_TEXT)
+                print(TEXTO_SAIDA_PROGRAMA_ENCERRADO)
                 break
             case "1":
-                new_tool = add_tool(tools)
-                add_tool_to_box(boxes, new_tool)
+                nova_peca = adicionar_peca(pecas)
+                adicionar_peca_a_caixa(caixas, nova_peca)
                 pause()
             case "2":
-                draw_title("Peças", 40)
-                list_tools(tools)
+                desenhar_titulo("Peças", 40)
+                listar_pecas(pecas)
                 pause()
             case "6":
-                list_all_boxes(boxes)
+                listar_todas_as_caixas(caixas)
                 pause()
             case _:
-                print(MENU_INVALID_OPTION_OUTPUT_TEXT)
+                print(TEXTO_SAIDA_ALERTA_OPCAO_INVALIDA)
 
 
 def pause() -> None:
-    input(PAUSE_INPUT_TEXT)
+    input(TEXTO_SAIDA_PAUSA_PROGRAMA)
 
 
-def show_menu() -> None:
+def imprimir_menu() -> None:
 
-    draw_title("Menu", 50)
+    desenhar_titulo("Menu", 50)
     print("1. Cadastrar nova peça")
     print("2. Listar peças aprovadas/reprovadas")
     print("3. Remover peça cadastrada")
@@ -60,67 +64,68 @@ def show_menu() -> None:
     print("0. Sair")
 
 
-def add_tool(tools: list[dict]) -> dict:
-    new_tool = create_tool(tools)
-    tools.append(new_tool)
+def adicionar_peca(pecas: list[dict]) -> dict:
+    nova_peca = criar_peca(pecas)
+    pecas.append(nova_peca)
 
-    print(TOOL_ADDED_SUCCESSFULLY_OUTPUT_TEXT)
+    print(TEXTO_SAIDA_PECA_ADICIONADA_COM_SUCESSO)
+    return nova_peca
 
-    return new_tool
 
-
-def remove_tool():
+def remover_peca():
     pass
 
 
-def list_tools(tools: list[dict]) -> None:
+def listar_pecas(pecas: list[dict]) -> None:
 
-    if len(tools) == 0:
-        print(NO_TOOLS_CREATED_OUTPUT_TEXT)
+    if len(pecas) == 0:
+        print(TEXTO_SAIDA_NAO_PECAS_CADASTRADAS)
         return
 
-    for tool in tools:
+    for peca in pecas:
         print(("_" * 60))
         print(
-            f"| ID: {tool["id"]} | PESO: {tool["weight"]}g | COR: {tool["color"]} | COMPRIMENTO: {tool["length"]} cm |"
+            f"| ID: {peca["id"]} | PESO: {peca["peso"]}g | COR: {peca["cor"]} | COMPRIMENTO: {peca["comprimento"]} cm |"
         )
-        print(f"| STATUS: {tool["status"]}")
+        print(f"| STATUS: {peca["status"]}")
 
-        failed_reasons = list(tool["failed_reasons"])
+        motivos_reprovacao = list(peca["motivos_reprovacao"])
 
-        if len(failed_reasons) != 0:
-            reasons = "\n| ".join(failed_reasons)
-            print(f"| MOTIVOS DA REPROVAÇÃO:\n| {reasons}")
+        if len(motivos_reprovacao) != 0:
+            motivos = "\n| ".join(motivos_reprovacao)
+            print(f"| MOTIVOS DA REPROVAÇÃO:\n| {motivos}")
         print(("_" * 60))
 
 
-def list_closed_boxes() -> None:
+def listar_caixas_fechadas() -> None:
     pass
 
 
-def list_all_boxes(boxes: list[list[dict]]) -> None:
+def listar_todas_as_caixas(caixas: list[dict]) -> None:
 
-    boxes_size = len(boxes)
+    caixas_size = len(caixas)
 
-    if boxes_size == 0:
-        print(NO_BOXES_CREATED_OUTPUT_TEXT)
+    if caixas_size == 0:
+        print(TEXTO_SAIDA_NAO_HA_CAIXAS_CRIADAS)
         return
 
-    draw_title("Caixas", 40)
-    for i in range(boxes_size):
-        draw_title(f"Caixa {i + 1}", 30)
-        draw_title("Peças")
-        list_tools(boxes[i])
+    desenhar_titulo("Caixas", 40)
+    for i in range(caixas_size):
+        desenhar_titulo(f"Caixa {i + 1}", 30)
+        status = "CAIXA FECHADA" if caixas[i]["esta_fechada"] else "CAIXA ABERTA"
+        print(status)
+        desenhar_titulo("Peças")
+        listar_pecas(caixas[i]["pecas"])
     
-    print(N_BOXES_FOUND_OUTPUT_TEXT + f"{boxes_size}")
+    print(TEXTO_SAIDA_NUMERO_CAIXAS_ENCONTRADAS + f"{caixas_size}")
 
 
-def create_final_report():
+def imprimir_relatorio_final():
     pass
 
 
-def draw_title(title: str, times: int = 20) -> None:
-    print((">" * times) + f" {title.upper()} " + ("<" * times))
+def desenhar_titulo(titulo: str, multiplicador: int = 20) -> None:
+    print((">" * multiplicador) + f" {titulo.upper()} " + ("<" * multiplicador))
 
 
 if __name__ == "__main__":
