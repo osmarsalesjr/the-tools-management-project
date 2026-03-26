@@ -1,7 +1,4 @@
-from validacoes_pecas import verificar_peca_existe_por_id, processar_validacao_peca
-
-TEXTO_ENTRADA_ID_PECA = "\nDigite a identificação numérica da peça: "
-TEXTO_SAIDA_ALERTA_ID_PECA_JA_EXISTE = "A identificação da peça digitada já está cadastrada."
+from validacoes_pecas import processar_validacao_peca
 
 TEXTO_ENTRADA_PESO_PECA = "\nDigite o peso em gramas (g) da peça: "
 TEXTO_ENTRADA_COR_PECA = "\nEscolha o número da cor da peça: "
@@ -14,27 +11,29 @@ TEXTO_SAIDA_ALERTA_COR_PECA_NAO_ENCONTRADA = (
 TEXTO_SAIDA_ERRO_VALOR_DEVE_SER_NUMERICO = "Erro! O valor deve ser numérico."
 TEXTO_SAIDA_ERRO_GENERICO = "Erro inesperado! Tente novamente."
 
-ids_pecas_disponiveis = [1]
-houve_peca_excluida = False
+ids_pecas_disponiveis = []
+
 
 def main() -> None:
     pass
+
 
 def gerar_id_peca(pecas: list[dict]) -> int:
     global ids_pecas_disponiveis
 
     numero_pecas = len(pecas)
+
+    if numero_pecas <= 0:
+        return 1
+
     numero_ids_pecas_disponiveis = len(ids_pecas_disponiveis)
 
-    if (
-        (numero_ids_pecas_disponiveis != 0 and numero_pecas <= 0)
-        or (numero_ids_pecas_disponiveis != 0 and numero_pecas > 0 and houve_peca_excluida)
-    ):
+    if numero_ids_pecas_disponiveis != 0:
+        ids_pecas_disponiveis.sort(reverse=True)
         return ids_pecas_disponiveis.pop()
-    
-    ultima_peca_cadastrada = pecas[numero_pecas - 1]
-    return ultima_peca_cadastrada["id"] + 1
-    
+
+    return buscar_maior_id_peca(pecas) + 1
+
 
 def receber_numero_inteiro(texto_entrada: str) -> int:
     while True:
@@ -49,7 +48,6 @@ def receber_numero_inteiro(texto_entrada: str) -> int:
 
 def criar_peca(pecas: list[dict]) -> dict:
     id = gerar_id_peca(pecas)
-    print(f"ID GERADO = {id}")
     peso = receber_numero_inteiro(TEXTO_ENTRADA_PESO_PECA)
     cor = receber_cor_peca()
     comprimento = receber_numero_inteiro(TEXTO_ENTRADA_COMPRIMENTO_PECA)
@@ -64,17 +62,6 @@ def criar_peca(pecas: list[dict]) -> dict:
     }
 
     return processar_validacao_peca(peca)
-
-
-def receber_id_peca(pecas: list[dict]) -> int:
-
-    while True:
-        id = receber_numero_inteiro(TEXTO_ENTRADA_ID_PECA)
-
-        if verificar_peca_existe_por_id(pecas, id):
-            print(TEXTO_SAIDA_ALERTA_ID_PECA_JA_EXISTE)
-        else:
-            return id
 
 
 def receber_cor_peca() -> str:
@@ -115,10 +102,29 @@ def imprimir_cores(cores: list[dict]) -> None:
         print(f"{cor["id"]}. {cor["nome"]}")
 
 
-def buscar_cor_por_id(id_cor: int, cores: list[dict]) -> str:
+def buscar_cor_por_id(id_cor: int, cores: list[dict]) -> str | None:
 
     cores_map = {cor["id"]: cor["nome"] for cor in cores}
     return cores_map.get(id_cor)
+
+
+def buscar_peca_por_id(id_peca: int, pecas: list[dict]) -> dict | None:
+
+    pecas_map = {peca["id"]: peca for peca in pecas}
+    return pecas_map.get(id_peca)
+
+
+def buscar_maior_id_peca(pecas: list[dict]) -> int:
+
+    ultimo_id_peca_maior = max([peca["id"] for peca in pecas])
+    return ultimo_id_peca_maior
+
+
+def atualizar_ids_pecas_disponiveis(id_peca_disponivel: int) -> None:
+    global ids_pecas_disponiveis
+
+    ids_pecas_disponiveis.append(id_peca_disponivel)
+    print(f"O ID {id_peca_disponivel} foi liberado para cadastro de nova peça.")
 
 
 if __name__ == "__main__":
