@@ -63,6 +63,18 @@ def criar_peca(pecas: list[dict]) -> dict:
 
     return processar_validacao_peca(peca)
 
+def criar_peca(peso: int, cor: str, comprimento: int) -> dict:
+    peca = {
+        "peso": peso,
+        "cor": cor,
+        "comprimento": comprimento,
+        "status": "",
+        "motivos_reprovacao": [],
+        "id_caixa": None
+    }
+
+    return processar_validacao_peca(peca) 
+
 
 def receber_cor_peca() -> str:
 

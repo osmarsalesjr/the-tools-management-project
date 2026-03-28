@@ -1,3 +1,8 @@
+from operacoes_banco_de_dados import (
+    recuperar_todas_as_caixas,
+    criar_caixa
+)
+
 STATUS_APROVADO = "APROVADO"
 
 
@@ -37,6 +42,29 @@ def adicionar_peca_a_caixa(caixas: list[dict], nova_peca: dict) -> None:
     if peca_esta_encaixada is False:
         nova_caixa = criar_nova_caixa(nova_peca)
         caixas.append(nova_caixa)
+
+    print("Peça foi adicionada a uma caixa.")
+
+
+def buscar_caixa_para_nova_peca() -> dict | None:
+    
+    caixas = recuperar_todas_as_caixas()
+
+    if len(caixas) == 0:
+        return criar_caixa()
+
+    caixa_para_nova_peca_encontrada = False
+
+    for caixa in caixas:
+        esta_fechada = caixa["esta_fechada"]
+
+        if esta_fechada:
+            continue
+
+        return caixa
+
+    if caixa_para_nova_peca_encontrada is False:
+        return criar_caixa()
 
     print("Peça foi adicionada a uma caixa.")
 

@@ -1,15 +1,31 @@
 from operacoes_pecas import (
     criar_peca,
     receber_numero_inteiro,
+    receber_cor_peca,
     buscar_peca_por_id,
     atualizar_ids_pecas_disponiveis,
 )
+
 from operacoes_caixas import (
-    adicionar_peca_a_caixa,
     criar_caixas_com_lista_de_pecas,
+    buscar_caixa_para_nova_peca,
     remover_peca_de_caixa,
 )
-from massa_dados_testes import pegar_lista_pecas
+
+from operacoes_banco_de_dados import (
+    conectar_banco_de_dados,
+    salvar_peca,
+    recuperar_todas_as_pecas,
+    recuperar_peca_por_id,
+    remover_peca
+)
+
+from massa_dados_testes import (
+    pegar_lista_pecas
+)
+
+TEXTO_ENTRADA_PESO_PECA = "\nDigite o peso em gramas (g) da peça: "
+TEXTO_ENTRADA_COMPRIMENTO_PECA = "\nDigite o comprimento em centímetro (cm) da peça: "
 
 TEXTO_ENTRADA_MENU_PRINCIPAL = "\nDigite a opção desejada: "
 TEXTO_ENTRADA_ID_PECA_A_REMOVER = (
@@ -31,11 +47,16 @@ TEXTO_SAIDA_NUMERO_CAIXAS_ENCONTRADAS = "QUANTIDADE DE CAIXAS ENCONTRADAS: "
 TEXTO_SAIDA_NAO_HA_CAIXAS_CRIADAS = "\nNão há caixas criadas."
 TEXTO_SAIDA_NAO_PECAS_CADASTRADAS = "\nNão há peças cadastradas."
 
+STATUS_APROVADO = "APROVADO"
 
 def main() -> None:
 
+    conectar_banco_de_dados()
+
     # pecas = [] comecar lista com zerada
-    pecas = pegar_lista_pecas()
+    # pecas = pegar_lista_pecas()
+
+    pecas = []
     caixas = []
 
     # atualizar lista de caixas com massa de testes
@@ -51,17 +72,16 @@ def main() -> None:
                 print(TEXTO_SAIDA_PROGRAMA_ENCERRADO)
                 break
             case "1":
-                nova_peca = adicionar_peca(pecas)
-                adicionar_peca_a_caixa(caixas, nova_peca)
+                adicionar_peca()
                 pausar()
             case "2":
+                pecas = recuperar_todas_as_pecas()
                 desenhar_titulo("Peças", 40)
                 listar_pecas(pecas)
                 pausar()
             case "3":
-                peca_removida = remover_peca(pecas)
-                remover_peca_de_caixa(peca_removida, caixas)
-                atualizar_ids_pecas_disponiveis(peca_removida["id"])
+                pecas = recuperar_todas_as_pecas()
+                excluir_peca(pecas)
                 pausar()
             case "4":
                 listar_caixas_fechadas(caixas)
@@ -89,31 +109,39 @@ def imprimir_menu() -> None:
     print("0. Sair")
 
 
-def adicionar_peca(pecas: list[dict]) -> dict:
-    nova_peca = criar_peca(pecas)
-    pecas.append(nova_peca)
+def adicionar_peca() -> dict:
 
-    print(TEXTO_SAIDA_PECA_ADICIONADA_COM_SUCESSO + f"{nova_peca["id"]}.")
-    return nova_peca
+    peso = receber_numero_inteiro(TEXTO_ENTRADA_PESO_PECA)
+    cor = receber_cor_peca()
+    comprimento = receber_numero_inteiro(TEXTO_ENTRADA_COMPRIMENTO_PECA)
+
+    peca = criar_peca(peso, cor, comprimento)
+
+    if peca["status"].casefold() == STATUS_APROVADO.casefold():
+        caixa = buscar_caixa_para_nova_peca()
+        caixa_id = caixa.get("id")
+        peca["caixa_id"] = caixa_id
+
+    peca_salva = salvar_peca(peca)
+    print(TEXTO_SAIDA_PECA_ADICIONADA_COM_SUCESSO + f"{peca_salva["id"]}.")
 
 
-def remover_peca(pecas: list[dict]):
+
+def excluir_peca(pecas: list[dict]):
 
     while True:
         listar_pecas(pecas)
         id_peca = receber_numero_inteiro(TEXTO_ENTRADA_ID_PECA_A_REMOVER)
 
-        peca_encontrada = buscar_peca_por_id(id_peca, pecas)
+        peca_encontrada = recuperar_peca_por_id(id_peca)
         if peca_encontrada is not None:
             break
         else:
             print(TEXTO_SAIDA_ALERTA_PECA_NAO_ENCONTRADA)
             pausar()
 
-    pecas.remove(peca_encontrada)
+    remover_peca(peca_encontrada.get("id"))
     print(TEXTO_SAIDA_PECA_REMOVIDA_COM_SUCESSO)
-
-    return peca_encontrada
 
 
 def listar_pecas(pecas: list[dict]) -> None:
@@ -169,6 +197,31 @@ def imprimir_relatorio_final():
 def desenhar_titulo(titulo: str, multiplicador: int = 20) -> None:
     print((">" * multiplicador) + f" {titulo.upper()} " + ("<" * multiplicador))
 
+
+""" def adicionar_peca(pecas: list[dict]) -> dict:
+    nova_peca = criar_peca(pecas)
+    pecas.append(nova_peca)
+
+    print(TEXTO_SAIDA_PECA_ADICIONADA_COM_SUCESSO + f"{nova_peca["id"]}.")
+    return nova_peca
+ 
+def remover_peca(pecas: list[dict]):
+
+    while True:
+        listar_pecas(pecas)
+        id_peca = receber_numero_inteiro(TEXTO_ENTRADA_ID_PECA_A_REMOVER)
+
+        peca_encontrada = buscar_peca_por_id(id_peca, pecas)
+        if peca_encontrada is not None:
+            break
+        else:
+            print(TEXTO_SAIDA_ALERTA_PECA_NAO_ENCONTRADA)
+            pausar()
+
+    pecas.remove(peca_encontrada)
+    print(TEXTO_SAIDA_PECA_REMOVIDA_COM_SUCESSO)
+
+    return peca_encontrada """
 
 if __name__ == "__main__":
     main()
