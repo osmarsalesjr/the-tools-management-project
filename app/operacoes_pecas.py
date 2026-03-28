@@ -11,28 +11,11 @@ TEXTO_SAIDA_ALERTA_COR_PECA_NAO_ENCONTRADA = (
 TEXTO_SAIDA_ERRO_VALOR_DEVE_SER_NUMERICO = "Erro! O valor deve ser numérico."
 TEXTO_SAIDA_ERRO_GENERICO = "Erro inesperado! Tente novamente."
 
-ids_pecas_disponiveis = []
+pecas_ids_disponiveis = []
 
 
 def main() -> None:
     pass
-
-
-def gerar_id_peca(pecas: list[dict]) -> int:
-    global ids_pecas_disponiveis
-
-    numero_pecas = len(pecas)
-
-    if numero_pecas <= 0:
-        return 1
-
-    numero_ids_pecas_disponiveis = len(ids_pecas_disponiveis)
-
-    if numero_ids_pecas_disponiveis != 0:
-        ids_pecas_disponiveis.sort(reverse=True)
-        return ids_pecas_disponiveis.pop()
-
-    return buscar_maior_id_peca(pecas) + 1
 
 
 def receber_numero_inteiro(texto_entrada: str) -> int:
@@ -46,31 +29,14 @@ def receber_numero_inteiro(texto_entrada: str) -> int:
             print(TEXTO_SAIDA_ERRO_GENERICO)
 
 
-def criar_peca(pecas: list[dict]) -> dict:
-    id = gerar_id_peca(pecas)
-    peso = receber_numero_inteiro(TEXTO_ENTRADA_PESO_PECA)
-    cor = receber_cor_peca()
-    comprimento = receber_numero_inteiro(TEXTO_ENTRADA_COMPRIMENTO_PECA)
-
-    peca = {
-        "id": id,
-        "peso": peso,
-        "cor": cor,
-        "comprimento": comprimento,
-        "status": "",
-        "motivos_reprovacao": [],
-    }
-
-    return processar_validacao_peca(peca)
-
-def criar_peca(peso: int, cor: str, comprimento: int) -> dict:
+def criar_peca_validada(peso: int, cor: str, comprimento: int) -> dict:
     peca = {
         "peso": peso,
         "cor": cor,
         "comprimento": comprimento,
         "status": "",
         "motivos_reprovacao": [],
-        "id_caixa": None
+        "caixa_id": None
     }
 
     return processar_validacao_peca(peca) 
@@ -114,29 +80,10 @@ def imprimir_cores(cores: list[dict]) -> None:
         print(f"{cor["id"]}. {cor["nome"]}")
 
 
-def buscar_cor_por_id(id_cor: int, cores: list[dict]) -> str | None:
+def buscar_cor_por_id(cor_id: int, cores: list[dict]) -> str | None:
 
     cores_map = {cor["id"]: cor["nome"] for cor in cores}
-    return cores_map.get(id_cor)
-
-
-def buscar_peca_por_id(id_peca: int, pecas: list[dict]) -> dict | None:
-
-    pecas_map = {peca["id"]: peca for peca in pecas}
-    return pecas_map.get(id_peca)
-
-
-def buscar_maior_id_peca(pecas: list[dict]) -> int:
-
-    ultimo_id_peca_maior = max([peca["id"] for peca in pecas])
-    return ultimo_id_peca_maior
-
-
-def atualizar_ids_pecas_disponiveis(id_peca_disponivel: int) -> None:
-    global ids_pecas_disponiveis
-
-    ids_pecas_disponiveis.append(id_peca_disponivel)
-    print(f"O ID {id_peca_disponivel} foi liberado para cadastro de nova peça.")
+    return cores_map.get(cor_id)
 
 
 if __name__ == "__main__":

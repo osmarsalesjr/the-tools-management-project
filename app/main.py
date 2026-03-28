@@ -1,15 +1,7 @@
 from operacoes_pecas import (
-    criar_peca,
+    criar_peca_validada,
     receber_numero_inteiro,
-    receber_cor_peca,
-    buscar_peca_por_id,
-    atualizar_ids_pecas_disponiveis,
-)
-
-from operacoes_caixas import (
-    criar_caixas_com_lista_de_pecas,
-    buscar_caixa_para_nova_peca,
-    remover_peca_de_caixa,
+    receber_cor_peca
 )
 
 from operacoes_banco_de_dados import (
@@ -17,12 +9,13 @@ from operacoes_banco_de_dados import (
     salvar_peca,
     recuperar_todas_as_pecas,
     recuperar_peca_por_id,
-    remover_peca
+    remover_peca,
+    recuperar_caixas_com_pecas,
+    buscar_caixa_para_nova_peca,
+    popular_banco_de_dados_com_massa_de_testes,
+    resetar_banco_de_dados
 )
 
-from massa_dados_testes import (
-    pegar_lista_pecas
-)
 
 TEXTO_ENTRADA_PESO_PECA = "\nDigite o peso em gramas (g) da peça: "
 TEXTO_ENTRADA_COMPRIMENTO_PECA = "\nDigite o comprimento em centímetro (cm) da peça: "
@@ -52,15 +45,10 @@ STATUS_APROVADO = "APROVADO"
 def main() -> None:
 
     conectar_banco_de_dados()
-
-    # pecas = [] comecar lista com zerada
-    # pecas = pegar_lista_pecas()
+    popular_banco_de_dados_com_massa_de_testes()
 
     pecas = []
     caixas = []
-
-    # atualizar lista de caixas com massa de testes
-    criar_caixas_com_lista_de_pecas(pecas, caixas)
 
     while True:
 
@@ -69,6 +57,7 @@ def main() -> None:
 
         match option:
             case "0":
+                resetar_banco_de_dados() # Zerar banco de dados
                 print(TEXTO_SAIDA_PROGRAMA_ENCERRADO)
                 break
             case "1":
@@ -84,9 +73,11 @@ def main() -> None:
                 excluir_peca(pecas)
                 pausar()
             case "4":
+                caixas = recuperar_caixas_com_pecas()
                 listar_caixas_fechadas(caixas)
                 pausar()
             case "6":
+                caixas = recuperar_caixas_com_pecas()
                 listar_caixas(caixas)
                 pausar()
             case _:
@@ -115,7 +106,7 @@ def adicionar_peca() -> dict:
     cor = receber_cor_peca()
     comprimento = receber_numero_inteiro(TEXTO_ENTRADA_COMPRIMENTO_PECA)
 
-    peca = criar_peca(peso, cor, comprimento)
+    peca = criar_peca_validada(peso, cor, comprimento)
 
     if peca["status"].casefold() == STATUS_APROVADO.casefold():
         caixa = buscar_caixa_para_nova_peca()
@@ -140,8 +131,7 @@ def excluir_peca(pecas: list[dict]):
             print(TEXTO_SAIDA_ALERTA_PECA_NAO_ENCONTRADA)
             pausar()
 
-    remover_peca(peca_encontrada.get("id"))
-    print(TEXTO_SAIDA_PECA_REMOVIDA_COM_SUCESSO)
+    remover_peca(peca_encontrada)
 
 
 def listar_pecas(pecas: list[dict]) -> None:
@@ -153,8 +143,12 @@ def listar_pecas(pecas: list[dict]) -> None:
     for peca in pecas:
         print(("_" * 60))
         print(
-            f"| ID: {peca["id"]} | PESO: {peca["peso"]}g | COR: {peca["cor"]} | COMPRIMENTO: {peca["comprimento"]} cm |"
+            f"| PEÇA ID: {peca["id"]} | PESO: {peca["peso"]}g | COR: {peca["cor"]} | COMPRIMENTO: {peca["comprimento"]} cm |"
         )
+
+        if peca.get("caixa_id") is not None:
+            print(f"| CAIXA ID: {peca["caixa_id"]}")
+
         print(f"| STATUS: {peca["status"]}")
 
         motivos_reprovacao = list(peca["motivos_reprovacao"])
@@ -166,7 +160,7 @@ def listar_pecas(pecas: list[dict]) -> None:
 
 
 def listar_caixas_fechadas(caixas: list[dict]) -> None:
-    caixas_fechadas = caixas_fechadas = [
+    caixas_fechadas = [
         caixa for caixa in caixas if caixa["esta_fechada"]
     ]
     listar_caixas(caixas_fechadas)
@@ -182,8 +176,9 @@ def listar_caixas(caixas: list[dict]) -> None:
 
     desenhar_titulo("Caixas", 40)
     for i in range(caixas_size):
+        print("_" * 60)
         status = "CAIXA FECHADA" if caixas[i]["esta_fechada"] else "CAIXA ABERTA"
-        desenhar_titulo(f"{status}", 30)
+        desenhar_titulo(f"| CAIXA ID: {caixas[i]["id"]} | {status}", 15)
         desenhar_titulo("Peças")
         listar_pecas(caixas[i]["pecas"])
 
@@ -197,31 +192,6 @@ def imprimir_relatorio_final():
 def desenhar_titulo(titulo: str, multiplicador: int = 20) -> None:
     print((">" * multiplicador) + f" {titulo.upper()} " + ("<" * multiplicador))
 
-
-""" def adicionar_peca(pecas: list[dict]) -> dict:
-    nova_peca = criar_peca(pecas)
-    pecas.append(nova_peca)
-
-    print(TEXTO_SAIDA_PECA_ADICIONADA_COM_SUCESSO + f"{nova_peca["id"]}.")
-    return nova_peca
- 
-def remover_peca(pecas: list[dict]):
-
-    while True:
-        listar_pecas(pecas)
-        id_peca = receber_numero_inteiro(TEXTO_ENTRADA_ID_PECA_A_REMOVER)
-
-        peca_encontrada = buscar_peca_por_id(id_peca, pecas)
-        if peca_encontrada is not None:
-            break
-        else:
-            print(TEXTO_SAIDA_ALERTA_PECA_NAO_ENCONTRADA)
-            pausar()
-
-    pecas.remove(peca_encontrada)
-    print(TEXTO_SAIDA_PECA_REMOVIDA_COM_SUCESSO)
-
-    return peca_encontrada """
 
 if __name__ == "__main__":
     main()
