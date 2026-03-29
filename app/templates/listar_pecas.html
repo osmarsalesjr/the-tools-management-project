@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Listagem de Peças — Ozzy{% endblock %}
+{% block breadcrumb %}PEÇAS / LISTAGEM{% endblock %}
+
+{% block content %}
+
+{% set mapa_cores = {
+  'vermelho':   '#e74c3c',
+  'azul':       '#3498db',
+  'verde':      '#2ecc71',
+  'amarelo':    '#f1c40f',
+  'laranja':    '#e67e22',
+  'roxo':       '#9b59b6',
+  'rosa':       '#e91e8c',
+  'branco':     '#ecf0f1',
+  'preto':      '#2c3e50',
+  'cinza':      '#95a5a6',
+  'marrom':     '#a0522d',
+  'bege':       '#f5f0dc',
+  'dourado':    '#f5a623',
+  'prata':      '#bdc3c7',
+} %}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div class="ozzy-page-title mb-0" style="flex:1;">
+    <i class="bi bi-check2-square" style="color: var(--ozzy-accent);"></i>
+    Listagem de Peças
+  </div>
+  <a href="{{ url_for('index') }}" class="btn-ozzy-outline btn">
+    <i class="bi bi-arrow-left me-1"></i> Voltar
+  </a>
+</div>
+
+<!-- Totalizadores -->
+<div class="row g-2 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="ozzy-stat-card">
+      <div class="ozzy-stat-value">{{ pecas | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-layers me-1"></i>Total</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="ozzy-stat-card ozzy-stat-card--approved">
+      <div class="ozzy-stat-value">{{ pecas | selectattr('status', 'equalto', 'APROVADO') | list | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-check-circle me-1"></i>Aprovadas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="ozzy-stat-card ozzy-stat-card--rejected">
+      <div class="ozzy-stat-value">{{ pecas | selectattr('status', 'equalto', 'REPROVADO') | list | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-x-circle me-1"></i>Reprovadas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="ozzy-stat-card ozzy-stat-card--box">
+      <div class="ozzy-stat-value">{{ pecas | selectattr('caixa_id') | list | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-box-seam me-1"></i>Em Caixas</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabela -->
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-table me-2"></i>Peças Cadastradas</span>
+    <span class="ozzy-pag-info">
+      Pág. <strong>{{ pagina_atual }}</strong> de <strong>{{ total_paginas }}</strong>
+      &nbsp;·&nbsp; {{ pecas_pagina | length }} de {{ pecas | length }} registros
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>#</th>
+          <th>Peso (g)</th>
+          <th>Cor</th>
+          <th>Comprimento (mm)</th>
+          <th>Status</th>
+          <th>Caixa ID</th>
+          <th>Motivos da Reprovação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if pecas_pagina %}
+          {% for peca in pecas_pagina %}
+          <tr class="ozzy-tr-{{ 'approved' if peca.status == 'APROVADO' else 'rejected' }}">
+            <td class="ozzy-mono">{{ peca.id }}</td>
+            <td class="ozzy-idx">{{ loop.index + offset }}</td>
+            <td>{{ peca.peso }}</td>
+            <td>
+              {% set cor_hex = mapa_cores.get(peca.cor | lower, '#5a6075') %}
+              <span class="ozzy-cor-badge" style="color: {{ cor_hex }}; border-color: {{ cor_hex }};">
+                {{ peca.cor }}
+              </span>
+            </td>
+            <td>{{ peca.comprimento }}</td>
+            <td>
+              {% if peca.status == 'APROVADO' %}
+                <span class="ozzy-badge ozzy-badge--approved">
+                  <i class="bi bi-check-circle-fill me-1"></i>APROVADO
+                </span>
+              {% else %}
+                <span class="ozzy-badge ozzy-badge--rejected">
+                  <i class="bi bi-x-circle-fill me-1"></i>REPROVADO
+                </span>
+              {% endif %}
+            </td>
+            <td class="ozzy-mono">
+              {% if peca.caixa_id %}
+                {{ peca.caixa_id }}
+              {% else %}
+                <span class="ozzy-empty">—</span>
+              {% endif %}
+            </td>
+            <td class="ozzy-motivos">
+              {% if peca.motivos_reprovacao %}
+                {% for motivo in peca.motivos_reprovacao %}
+                  <span class="ozzy-motivo-item">
+                    <i class="bi bi-dot"></i>{{ motivo }}
+                  </span>
+                  {% if not loop.last %}<br>{% endif %}
+                {% endfor %}
+              {% else %}
+                <span class="ozzy-empty">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" class="text-center py-5 ozzy-empty-state">
+              <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: .5rem;"></i>
+              Nenhuma peça cadastrada.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginação -->
+  {% if total_paginas > 1 %}
+  <div class="card-footer d-flex justify-content-center py-3">
+    <nav>
+      <ul class="pagination ozzy-pagination mb-0">
+
+        <!-- Anterior -->
+        <li class="page-item {% if pagina_atual == 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('listar_pecas', pagina=pagina_atual - 1) }}">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+
+        <!-- Páginas -->
+        {% for p in range(1, total_paginas + 1) %}
+          <li class="page-item {% if p == pagina_atual %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('listar_pecas', pagina=p) }}">{{ p }}</a>
+          </li>
+        {% endfor %}
+
+        <!-- Próxima -->
+        <li class="page-item {% if pagina_atual == total_paginas %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('listar_pecas', pagina=pagina_atual + 1) }}">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+
+</div><!-- /card -->
+
+{% endblock %}
+
+
+{% block extra_head %}
+<style>
+  /* ── STAT CARDS ─────────────────────────────────── */
+  .ozzy-stat-card {
+    background: var(--ozzy-surface);
+    border: 1px solid var(--ozzy-border);
+    border-left: 3px solid var(--ozzy-accent);
+    border-radius: 6px;
+    padding: .85rem 1.1rem;
+    text-align: center;
+  }
+  .ozzy-stat-card--approved { border-left-color: #2ecc71; }
+  .ozzy-stat-card--rejected { border-left-color: #e74c3c; }
+  .ozzy-stat-card--box      { border-left-color: #3498db; }
+
+  .ozzy-stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.9rem;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .ozzy-stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ozzy-muted);
+    margin-top: 4px;
+  }
+
+  /* ── TABELA ─────────────────────────────────────── */
+  .ozzy-idx {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    color: var(--ozzy-muted);
+    width: 42px;
+  }
+
+  .ozzy-mono {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .8rem;
+    color: var(--ozzy-accent);
+  }
+
+  .ozzy-empty {
+    color: var(--ozzy-muted);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .ozzy-empty-state {
+    color: var(--ozzy-muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .8rem;
+    letter-spacing: .06em;
+  }
+
+  /* Linha colorida conforme status */
+  .ozzy-tr-approved:hover td { background: rgba(46,204,113,.04) !important; }
+  .ozzy-tr-rejected:hover td { background: rgba(231,76,60,.04)  !important; }
+
+  /* ── BADGES ─────────────────────────────────────── */
+  .ozzy-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .07em;
+    padding: .25rem .6rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .ozzy-badge--approved {
+    background: rgba(46,204,113,.12);
+    border: 1px solid rgba(46,204,113,.3);
+    color: #2ecc71;
+  }
+
+  .ozzy-badge--rejected {
+    background: rgba(231,76,60,.12);
+    border: 1px solid rgba(231,76,60,.3);
+    color: #e74c3c;
+  }
+
+  /* ── COR BADGE ──────────────────────────────────── */
+  .ozzy-cor-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    letter-spacing: .05em;
+    padding: .2rem .55rem;
+    border-radius: 3px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--ozzy-border);
+    /*color: var(--ozzy-text);*/
+  }
+
+  /* ── MOTIVOS ────────────────────────────────────── */
+  .ozzy-motivo-item {
+    font-size: .78rem;
+    color: #e74c3c;
+    display: inline;
+  }
+
+  .ozzy-motivo-item .bi-dot {
+    font-size: .9rem;
+    vertical-align: middle;
+  }
+
+  /* ── PAGINAÇÃO ──────────────────────────────────── */
+  .ozzy-pag-info {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .06em;
+  }
+
+  .card-footer {
+    background: var(--ozzy-surface) !important;
+    border-top: 1px solid var(--ozzy-border) !important;
+  }
+
+  .ozzy-pagination .page-link {
+    background: var(--ozzy-bg);
+    border-color: var(--ozzy-border);
+    color: var(--ozzy-muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .78rem;
+    transition: background .15s, color .15s;
+  }
+
+  .ozzy-pagination .page-link:hover {
+    background: rgba(245,166,35,.1);
+    color: var(--ozzy-accent);
+    border-color: var(--ozzy-accent);
+  }
+
+  .ozzy-pagination .page-item.active .page-link {
+    background: var(--ozzy-accent);
+    border-color: var(--ozzy-accent);
+    color: #0d0f14;
+    font-weight: 700;
+  }
+
+  .ozzy-pagination .page-item.disabled .page-link {
+    background: var(--ozzy-surface);
+    color: var(--ozzy-border);
+    border-color: var(--ozzy-border);
+  }
+</style>
+{% endblock %}

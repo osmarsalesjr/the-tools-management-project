@@ -55,6 +55,10 @@ def receber_cor_peca() -> str:
         {"id": 8, "nome": "Laranja"},
         {"id": 9, "nome": "Rosa"},
         {"id": 10, "nome": "Cinza"},
+        {"id": 11, "nome": "Roxo"},
+        {"id": 12, "nome": "Dourado"},
+        {"id": 13, "nome": "Prata"},
+        {"id": 14, "nome": "Bege"},
     ]
 
     while True:

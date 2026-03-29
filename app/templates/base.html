@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Ozzy - Gerenciamento de Peças{% endblock %}</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --ozzy-bg:        #0d0f14;
+      --ozzy-surface:   #141720;
+      --ozzy-border:    #1e2330;
+      --ozzy-accent:    #f5a623;
+      --ozzy-accent2:   #e8680a;
+      --ozzy-text:      #c8cdd8;
+      --ozzy-muted:     #5a6075;
+      --ozzy-header-h:  72px;
+      --ozzy-footer-h:  48px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--ozzy-bg);
+      color: var(--ozzy-text);
+      font-family: 'Exo 2', sans-serif;
+      font-size: 15px;
+    }
+
+    /* ── SCANLINE OVERLAY ─────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.08) 2px,
+        rgba(0,0,0,.08) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── HEADER ───────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--ozzy-header-h);
+      background: var(--ozzy-surface);
+      border-bottom: 2px solid var(--ozzy-accent);
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      gap: 1.2rem;
+      box-shadow: 0 4px 24px rgba(245,166,35,.12);
+    }
+
+    .ozzy-logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      text-decoration: none;
+    }
+
+    .ozzy-logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--ozzy-accent), var(--ozzy-accent2));
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      color: #0d0f14;
+      flex-shrink: 0;
+      box-shadow: 0 0 18px rgba(245,166,35,.4);
+    }
+
+    .ozzy-app-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 1.55rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .ozzy-app-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem;
+      color: var(--ozzy-accent);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .ozzy-divider {
+      width: 1px;
+      height: 36px;
+      background: var(--ozzy-border);
+      margin: 0 .5rem;
+    }
+
+    .ozzy-breadcrumb {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem;
+      color: var(--ozzy-muted);
+      letter-spacing: .06em;
+    }
+
+    .ozzy-breadcrumb span {
+      color: var(--ozzy-accent);
+    }
+
+    .ozzy-status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .68rem;
+      color: var(--ozzy-muted);
+      letter-spacing: .06em;
+    }
+
+    .ozzy-status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #2ecc71;
+      box-shadow: 0 0 6px #2ecc71;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .4; }
+    }
+
+    /* ── MAIN FRAME ───────────────────────────────────── */
+    .ozzy-wrapper {
+      min-height: calc(100vh - var(--ozzy-header-h) - var(--ozzy-footer-h));
+      padding: 2rem 1.5rem;
+    }
+
+    /* ── BANNER HERO ──────────────────────────────────── */
+    .ozzy-banner {
+      background: var(--ozzy-surface);
+      border: 1px solid var(--ozzy-border);
+      border-left: 4px solid var(--ozzy-accent);
+      border-radius: 6px;
+      padding: 1.1rem 1.6rem;
+      margin-bottom: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .ozzy-banner-icon {
+      font-size: 1.8rem;
+      color: var(--ozzy-accent);
+    }
+
+    .ozzy-banner-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .ozzy-banner-desc {
+      font-size: .8rem;
+      color: var(--ozzy-muted);
+      margin-top: 2px;
+    }
+
+    /* ── PAGE CONTENT BLOCK ───────────────────────────── */
+    .ozzy-page-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #fff;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .ozzy-page-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--ozzy-accent), transparent);
+      margin-left: .4rem;
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    footer {
+      height: var(--ozzy-footer-h);
+      background: var(--ozzy-surface);
+      border-top: 1px solid var(--ozzy-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+    }
+
+    footer span {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .7rem;
+      color: var(--ozzy-muted);
+      letter-spacing: .08em;
+    }
+
+    footer .footer-accent {
+      color: var(--ozzy-accent);
+    }
+
+    /* ── BOOTSTRAP OVERRIDES ──────────────────────────── */
+    .btn-ozzy {
+      background: linear-gradient(135deg, var(--ozzy-accent), var(--ozzy-accent2));
+      color: #0d0f14;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: .95rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 4px;
+      padding: .45rem 1.2rem;
+      transition: opacity .2s, box-shadow .2s;
+    }
+
+    .btn-ozzy:hover {
+      opacity: .88;
+      box-shadow: 0 0 14px rgba(245,166,35,.35);
+      color: #0d0f14;
+    }
+
+    .btn-ozzy-outline {
+      background: transparent;
+      color: var(--ozzy-accent);
+      border: 1px solid var(--ozzy-accent);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: .95rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      padding: .45rem 1.2rem;
+      transition: background .2s, color .2s;
+    }
+
+    .btn-ozzy-outline:hover {
+      background: var(--ozzy-accent);
+      color: #0d0f14;
+    }
+
+    .card {
+      background: var(--ozzy-surface) !important;
+      border: 1px solid var(--ozzy-border) !important;
+      border-radius: 6px;
+    }
+
+    .card-header {
+      background: rgba(245,166,35,.07) !important;
+      border-bottom: 1px solid var(--ozzy-border) !important;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--ozzy-accent) !important;
+    }
+
+    .table {
+      color: var(--ozzy-text) !important;
+    }
+
+    .table thead th {
+      background: rgba(245,166,35,.08) !important;
+      color: var(--ozzy-accent) !important;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      border-color: var(--ozzy-border) !important;
+    }
+
+    .table td, .table tr {
+      border-color: var(--ozzy-border) !important;
+    }
+
+    .table tbody tr:hover {
+      background: rgba(245,166,35,.04) !important;
+    }
+
+    .form-control, .form-select {
+      background: var(--ozzy-bg) !important;
+      border: 1px solid var(--ozzy-border) !important;
+      color: var(--ozzy-text) !important;
+      border-radius: 4px;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--ozzy-accent) !important;
+      box-shadow: 0 0 0 3px rgba(245,166,35,.15) !important;
+    }
+
+    .form-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .73rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--ozzy-muted);
+    }
+
+    .alert-ozzy-success {
+      background: rgba(46,204,113,.1);
+      border: 1px solid rgba(46,204,113,.3);
+      color: #2ecc71;
+      border-radius: 4px;
+    }
+
+    .alert-ozzy-danger {
+      background: rgba(231,76,60,.1);
+      border: 1px solid rgba(231,76,60,.3);
+      color: #e74c3c;
+      border-radius: 4px;
+    }
+
+    /* ── SCROLLBAR ────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--ozzy-bg); }
+    ::-webkit-scrollbar-thumb { background: var(--ozzy-border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--ozzy-accent); }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- ═══ HEADER ════════════════════════════════════════ -->
+  <header>
+    <a href="{{ url_for('index') }}" class="ozzy-logo-wrap">
+      <div class="ozzy-logo-icon">
+        <i class="bi bi-gear-fill"></i>
+      </div>
+      <div>
+        <div class="ozzy-app-name">Ozzy</div>
+        <div class="ozzy-app-sub">Gerenciamento de Peças</div>
+      </div>
+    </a>
+
+    <div class="ozzy-divider"></div>
+
+    <div class="ozzy-breadcrumb">
+      SYS / <span>{% block breadcrumb %}HOME{% endblock %}</span>
+    </div>
+
+    <div class="ozzy-status">
+      <div class="ozzy-status-dot"></div>
+      SISTEMA ONLINE
+    </div>
+  </header>
+
+  <!-- ═══ CONTEÚDO PRINCIPAL ════════════════════════════ -->
+  <main class="ozzy-wrapper container-fluid">
+
+    <!-- Banner fixo de apresentação -->
+    <div class="ozzy-banner">
+      <i class="bi bi-cpu ozzy-banner-icon"></i>
+      <div>
+        <div class="ozzy-banner-title">Ozzy — Gerenciamento de Peças</div>
+        <div class="ozzy-banner-desc">
+          Controle de cadastro, aprovação e rastreabilidade de peças industriais
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensagens flash (Flask) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-ozzy-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-3 px-3 py-2" role="alert">
+            <i class="bi bi-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Bloco variável por página -->
+    {% block content %}{% endblock %}
+
+  </main>
+
+  <!-- ═══ FOOTER ════════════════════════════════════════ -->
+  <footer>
+    <span>&copy; <span class="footer-accent">{{ now.year }}</span></span>
+    <span>Ozzy — Serviços de Tecnologia e Inovação</span>
+  </footer>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>

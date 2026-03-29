@@ -1,4 +1,5 @@
-from validacoes_pecas import (
+
+from operacoes.validacoes_pecas import (
     STATUS_APROVADO,
     STATUS_REPROVADO,
     MOTIVO_REPROVADO_POR_PESO,

@@ -1,8 +1,12 @@
 
-from massa_dados_testes import pegar_lista_pecas
-
 import sqlite3
 import json
+
+from flask import g
+from sqlite3 import Connection
+
+from operacoes.massa_dados_testes import pegar_lista_pecas
+
 
 STATUS_APROVADO = "APROVADO"
 
@@ -36,17 +40,29 @@ def conectar_banco_de_dados() -> None:
     global con
     
     try:
+        if "db" not in g:
+            g.db = sqlite3.connect("bd.db")
+            g.db.row_factory = sqlite3.Row
+            con = g.db
 
-        con = sqlite3.connect("bd.db")
-        con.row_factory = sqlite3.Row
-        criar_banco_de_dados()
-
+            ### Cria tabelas
+            criar_banco_de_dados()
     except sqlite3.DatabaseError as e:
-        print(f"Erro ao conectar ou inicializar o banco de dados: {e}")
-        
-        if con:
+        print(f"Erro ao conectar o banco de dados: {e}")
+        raise e
+
+
+def desconectar_banco_de_dados() -> None:
+    global con
+    
+    try:
+        con = g.pop('db', None)
+        if con is not None:
             con.close()
-        raise
+    except sqlite3.DatabaseError as e:
+        con.close()
+        print(f"Erro ao desconectar o banco de dados: {e}")
+        raise e
 
 
 def criar_banco_de_dados() -> None:
@@ -57,12 +73,14 @@ def criar_banco_de_dados() -> None:
         cursor = con.cursor()
         cursor.executescript(SCRIPT)
 
+        popular_banco_de_dados_com_massa_de_testes()
+
     except sqlite3.DatabaseError as e:
 
         print(f"Erro ao criar as tabelas: {e}")
-
         con.rollback()
         raise
+
 
 def salvar_peca(peca: dict) -> dict:
     global con, cursor
