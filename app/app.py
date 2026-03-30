@@ -14,13 +14,21 @@ from services.bd_service import (
     buscar_todas_as_pecas,
     buscar_caixas_com_pecas,
     buscar_caixas_fechadas_com_pecas,
+    buscar_ou_criar_caixa_para_nova_peca,
     buscar_peca_por_id,
     excluir_peca,
+    buscar_cor_por_id,
+    buscar_cores,
+    guardar_peca,
 
 )
 
+from utilitarios.pecas_utils import criar_peca
+from utilitarios.validacoes import validar_peca
+
 app = Flask(__name__)
 LIMITE_ITENS_POR_PAGINA = 20
+STATUS_APROVADO = "APROVADO"
 
 
 ### Abre uma nova conexão com banco de dados para cada requisição
@@ -48,9 +56,52 @@ def index():
     return render_template("index.html")
 
 
-@app.route('/cadastrar_peca')
+@app.route('/cadastrar-peca')
 def cadastrar_peca():
-    pass
+
+    cores = buscar_cores()
+
+    return render_template(
+        'cadastrar_peca.html',
+        cores=cores
+    )
+
+
+@app.post('/pecas')
+def adicionar_peca():
+
+    dados = request.get_json()
+
+    peso = dados.get('peso')
+    comprimento = dados.get('comprimento')
+    cor = buscar_cor_por_id(dados.get('cor_id'))
+
+    if cor is None:
+        return 'Cor selecionada não encontrada.', 404
+
+    peca = criar_peca(peso, cor["id"], comprimento)
+    peca = validar_peca(peca, cor)
+
+    if peca["status"].casefold() == STATUS_APROVADO.casefold():
+        caixa = buscar_ou_criar_caixa_para_nova_peca()
+        peca["caixa_id"] = caixa.get("id")
+
+    peca = guardar_peca(peca)
+    return '', 201, {'Location': f'/peca/{peca["id"]}'}
+
+
+@app.get('/pecas/<int:peca_id>')
+def detalhar_peca(peca_id: int):
+
+    peca = buscar_peca_por_id(peca_id)
+
+    if peca is None:
+        return 'Peça não encontrada.', 404
+    
+    return render_template(
+        'detalhar_peca.html',
+        peca=peca
+    )
 
 
 @app.delete('/pecas/<int:peca_id>')
@@ -59,7 +110,7 @@ def deletar_peca(peca_id: int):
     peca = buscar_peca_por_id(peca_id)
 
     if peca is None:
-        return '', 404
+        return 'Peça não encontrada.', 404
     
     excluir_peca(peca)
     return '', 204

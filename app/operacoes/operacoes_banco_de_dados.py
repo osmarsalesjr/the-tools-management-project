@@ -3,9 +3,8 @@ import sqlite3
 import json
 
 from flask import g
-from sqlite3 import Connection
 
-from operacoes.massa_dados_testes import pegar_lista_pecas
+from operacoes.massa_dados_testes import pegar_massa_lista_pecas
 
 
 STATUS_APROVADO = "APROVADO"
@@ -16,16 +15,23 @@ CREATE TABLE IF NOT EXISTS caixa (
     esta_fechada INTEGER NOT NULL DEFAULT 0 CHECK (esta_fechada IN (0, 1))
 );
 
+CREATE TABLE IF NOT EXISTS cor (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome      TEXT NOT NULL
+
+);
+
 CREATE TABLE IF NOT EXISTS peca (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     caixa_id            INTEGER,
     peso                INTEGER NOT NULL,
-    cor                 TEXT NOT NULL,
+    cor_id              INTEGER NOT NULL,
     comprimento         INTEGER NOT NULL,
     status              TEXT NOT NULL DEFAULT 'REPROVADO' CHECK (status IN ('APROVADO', 'REPROVADO')),
     motivos_reprovacao  TEXT DEFAULT '[]',
 
-    FOREIGN KEY (caixa_id) REFERENCES caixa(id)
+    FOREIGN KEY (caixa_id) REFERENCES caixa(id),
+    FOREIGN KEY (cor_id) REFERENCES cor(id)
 );
 """
 cursor = None
@@ -56,6 +62,7 @@ def desconectar_banco_de_dados() -> None:
     global con
     
     try:
+        #resetar_banco_de_dados()
         con = g.pop('db', None)
         if con is not None:
             con.close()
@@ -73,6 +80,7 @@ def criar_banco_de_dados() -> None:
         cursor = con.cursor()
         cursor.executescript(SCRIPT)
 
+        inicializar_tabela_de_cores()
         popular_banco_de_dados_com_massa_de_testes()
 
     except sqlite3.DatabaseError as e:
@@ -86,7 +94,7 @@ def salvar_peca(peca: dict) -> dict:
     global con, cursor
     
     peso = peca["peso"]
-    cor = peca["cor"]
+    cor_id = peca["cor_id"]
     comprimento = peca["comprimento"]
     status = peca["status"]
     motivos_reprovacao = json.dumps(peca["motivos_reprovacao"])
@@ -94,9 +102,9 @@ def salvar_peca(peca: dict) -> dict:
 
     try:
         cursor.execute("""
-            INSERT INTO peca (caixa_id, peso, cor, comprimento, status, motivos_reprovacao)
+            INSERT INTO peca (caixa_id, peso, cor_id, comprimento, status, motivos_reprovacao)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (caixa_id, peso, cor, comprimento, status, motivos_reprovacao))
+        """, (caixa_id, peso, cor_id, comprimento, status, motivos_reprovacao))
 
         con.commit()
         peca["id"] = cursor.lastrowid
@@ -105,6 +113,27 @@ def salvar_peca(peca: dict) -> dict:
             verificar_status_caixa(caixa_id)
         
         return peca
+
+    except sqlite3.DatabaseError as e:
+        print(f"Erro ao salvar peça: {e}")
+        con.rollback()
+        raise
+
+
+def salvar_cor(cor: dict) -> dict:
+    global con, cursor
+    
+    nome = cor["nome"].upper()
+
+    try:
+        cursor.execute("""
+            INSERT INTO cor (nome) VALUES (?)
+        """, (nome,))
+
+        con.commit()
+        print(f"Cor {nome} cadastrada com sucesso.")
+        
+        return cor
 
     except sqlite3.DatabaseError as e:
         print(f"Erro ao salvar peça: {e}")
@@ -200,7 +229,7 @@ def recuperar_pecas_por_caixa_id(caixa_id: int) -> int:
                 "id": row["id"],
                 "caixa_id": row["caixa_id"],
                 "peso": row["peso"],
-                "cor": row["cor"],
+                "cor": recuperar_cor_por_id(row["cor_id"])["nome"],
                 "comprimento": row["comprimento"],
                 "status": row["status"],
                 "motivos_reprovacao": json.loads(row["motivos_reprovacao"])
@@ -285,7 +314,7 @@ def recuperar_todas_as_pecas() -> list[dict]:
                 "id": row["id"],
                 "caixa_id": row["caixa_id"],
                 "peso": row["peso"],
-                "cor": row["cor"],
+                "cor": recuperar_cor_por_id(row["cor_id"])["nome"],
                 "comprimento": row["comprimento"],
                 "status": row["status"],
                 "motivos_reprovacao": json.loads(row["motivos_reprovacao"])
@@ -295,6 +324,26 @@ def recuperar_todas_as_pecas() -> list[dict]:
 
     except sqlite3.DatabaseError as e:
         print(f"Erro ao buscar peças: {e}")
+        raise
+
+
+def recuperar_todas_as_cores() -> list[dict]:
+    global cursor
+
+    try:
+        cursor.execute("SELECT * FROM cor")
+        rows = cursor.fetchall()
+
+        return [
+            {
+                "id": row["id"],
+                "nome": row["nome"],
+            }
+            for row in rows
+        ]
+
+    except sqlite3.DatabaseError as e:
+        print(f"Erro ao buscar cores: {e}")
         raise
 
 
@@ -312,13 +361,32 @@ def recuperar_peca_por_id(peca_id: int) -> dict:
             "id": row["id"],
             "caixa_id": row["caixa_id"],
             "peso": row["peso"],
-            "cor": row["cor"],
+            "cor": recuperar_cor_por_id(row["cor_id"])["nome"],
             "comprimento": row["comprimento"],
             "status": row["status"],
             "motivos_reprovacao": json.loads(row["motivos_reprovacao"])
         }
     except sqlite3.DatabaseError as e:
         print(f"Erro ao buscar peça {peca_id}: {e}")
+        raise
+
+
+def recuperar_cor_por_id(cor_id: int) -> dict:
+    global cursor
+
+    try:
+        cursor.execute("SELECT * FROM cor WHERE id = ?", (cor_id,))
+        row = cursor.fetchone()
+
+        if row is None:
+            return None
+
+        return {
+            "id": row["id"],
+            "nome": row["nome"]
+        }
+    except sqlite3.DatabaseError as e:
+        print(f"Erro ao buscar cor {cor_id}: {e}")
         raise
 
 
@@ -341,7 +409,7 @@ def recuperar_caixa_por_id(caixa_id: int) -> dict:
         raise
 
 
-def buscar_caixa_para_nova_peca() -> dict | None:
+def recuperar_ou_criar_caixa_para_nova_peca() -> dict | None:
     
     caixas = recuperar_caixas()
 
@@ -363,6 +431,34 @@ def buscar_caixa_para_nova_peca() -> dict | None:
         return criar_caixa()
 
 
+def inicializar_tabela_de_cores() -> None:
+
+    cores = recuperar_todas_as_cores()
+
+    if len(cores) > 0:
+        return
+    
+    cores = [
+        {"nome": "Preto"},
+        {"nome": "Branco"},
+        {"nome": "Vermelho"},
+        {"nome": "Azul"},
+        {"nome": "Amarelo"},
+        {"nome": "Verde"},
+        {"nome": "Marrom"},
+        {"nome": "Laranja"},
+        {"nome": "Rosa"},
+        {"nome": "Cinza"},
+        {"nome": "Roxo"},
+        {"nome": "Dourado"},
+        {"nome": "Prata"},
+        {"nome": "Bege"},
+    ]
+
+    for cor in cores:
+        salvar_cor(cor)
+
+
 def popular_banco_de_dados_com_massa_de_testes() -> None:
 
     pecas_existentes = recuperar_todas_as_pecas()
@@ -370,11 +466,11 @@ def popular_banco_de_dados_com_massa_de_testes() -> None:
     if len(pecas_existentes) > 0:
         return
 
-    pecas = pegar_lista_pecas()
+    pecas = pegar_massa_lista_pecas()
 
     for peca in pecas:
         if peca["status"].casefold() == STATUS_APROVADO.casefold():
-            caixa = buscar_caixa_para_nova_peca()
+            caixa = recuperar_ou_criar_caixa_para_nova_peca()
             caixa_id = caixa.get("id")
             peca["caixa_id"] = caixa_id
         peca_salva = salvar_peca(peca)
@@ -388,8 +484,10 @@ def resetar_banco_de_dados() -> None:
         cursor.executescript("""
             DELETE FROM peca;
             DELETE FROM caixa;
+            DELETE FROM cor;
             DELETE FROM sqlite_sequence WHERE name = 'peca';
             DELETE FROM sqlite_sequence WHERE name = 'caixa';
+            DELETE FROM sqlite_sequence WHERE name = 'cor';
         """)
 
         con.commit()

@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhe da Peça #{{ peca.id }} — Ozzy{% endblock %}
+{% block breadcrumb %}PEÇAS / DETALHE / <span style="color:#fff;">#{{ peca.id }}</span>{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div class="ozzy-page-title mb-0" style="flex:1;">
+    <i class="bi bi-gear-fill" style="color: var(--ozzy-accent);"></i>
+    Detalhe da Peça
+  </div>
+  <div class="d-flex gap-2">
+    <button type="button" class="btn-ozzy-outline btn" onclick="history.back()">
+      <i class="bi bi-arrow-left me-1"></i> Voltar
+    </button>
+    <button class="btn ozzy-btn-excluir" onclick="abrirConfirmacao()">
+      <i class="bi bi-trash3 me-1"></i> Excluir Peça
+    </button>
+  </div>
+</div>
+
+<!-- Card principal -->
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+
+    <div class="card ozzy-detail-card">
+
+      <!-- Cabeçalho com ID e status -->
+      <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="ozzy-detail-id">ID <span class="ozzy-accent-text">#{{ peca.id }}</span></span>
+        </div>
+        {% if peca.status == 'APROVADO' %}
+          <span class="ozzy-badge ozzy-badge--approved">
+            <i class="bi bi-check-circle-fill me-1"></i>APROVADO
+          </span>
+        {% else %}
+          <span class="ozzy-badge ozzy-badge--rejected">
+            <i class="bi bi-x-circle-fill me-1"></i>REPROVADO
+          </span>
+        {% endif %}
+      </div>
+
+      <div class="card-body p-4">
+
+        <!-- Grid de atributos -->
+        <div class="row g-3 mb-4">
+
+          <div class="col-12 col-sm-6">
+            <div class="ozzy-attr-block">
+              <div class="ozzy-attr-label">
+                <i class="bi bi-speedometer2 me-1"></i>Peso
+              </div>
+              <div class="ozzy-attr-value">{{ peca.peso }} <span class="ozzy-attr-unit">g</span></div>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6">
+            <div class="ozzy-attr-block">
+              <div class="ozzy-attr-label">
+                <i class="bi bi-rulers me-1"></i>Comprimento
+              </div>
+              <div class="ozzy-attr-value">{{ peca.comprimento }} <span class="ozzy-attr-unit">cm</span></div>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6">
+            <div class="ozzy-attr-block">
+              <div class="ozzy-attr-label">
+                <i class="bi bi-palette me-1"></i>Cor
+              </div>
+              <div class="ozzy-attr-value">
+                {% set mapa_cores = {
+                  'vermelho': '#e74c3c', 'azul': '#3498db', 'verde': '#2ecc71',
+                  'amarelo': '#f1c40f', 'laranja': '#e67e22', 'roxo': '#9b59b6',
+                  'rosa': '#e91e8c', 'branco': '#ecf0f1', 'preto': '#2c3e50',
+                  'cinza': '#95a5a6', 'marrom': '#a0522d', 'bege': '#f5f0dc',
+                  'dourado': '#f5a623', 'prata': '#bdc3c7',
+                } %}
+                {% set cor_hex = mapa_cores.get(peca.cor | lower, '#5a6075') %}
+                <span class="ozzy-cor-badge" style="color: {{ cor_hex }}; border-color: {{ cor_hex }};">
+                  {{ peca.cor }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6">
+            <div class="ozzy-attr-block">
+              <div class="ozzy-attr-label">
+                <i class="bi bi-box-seam me-1"></i>Caixa ID
+              </div>
+              <div class="ozzy-attr-value">
+                {% if peca.caixa_id %}
+                  <span class="ozzy-accent-text">{{ peca.caixa_id }}</span>
+                {% else %}
+                  <span class="ozzy-empty">—</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Motivos de reprovação -->
+        {% if peca.status == 'REPROVADO' %}
+        <div class="ozzy-motivos-block">
+          <div class="ozzy-motivos-title">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>Motivos da Reprovação
+          </div>
+          <div class="ozzy-motivos-body">
+            {% if peca.motivos_reprovacao %}
+              <ul class="ozzy-motivos-list mb-0">
+                {% for motivo in peca.motivos_reprovacao %}
+                  <li><i class="bi bi-dot"></i>{{ motivo }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="ozzy-empty">Nenhum motivo registrado.</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══ MODAL DE CONFIRMAÇÃO ════════════════════════════ -->
+<div class="modal fade" id="modalConfirmar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content ozzy-modal">
+
+      <div class="modal-header ozzy-modal-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+          <span class="ozzy-modal-title">Confirmar Exclusão</span>
+        </div>
+      </div>
+
+      <div class="modal-body ozzy-modal-body">
+        <p>Tem certeza que deseja excluir a peça <strong class="ozzy-accent-text">#{{ peca.id }}</strong>?</p>
+        <p class="ozzy-modal-warning">Esta ação é permanente e não pode ser desfeita.</p>
+      </div>
+
+      <div class="modal-footer ozzy-modal-footer">
+        <button type="button" class="btn-ozzy-outline btn" data-bs-dismiss="modal">
+          <i class="bi bi-x me-1"></i>Cancelar
+        </button>
+        <button type="button" class="btn ozzy-btn-excluir-confirmar" id="btn-confirmar-exclusao" onclick="confirmarExclusao()">
+          <i class="bi bi-trash3 me-1"></i>Excluir Peça
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ MODAL DE SUCESSO ═════════════════════════════════ -->
+<div class="modal fade" id="modalSucesso" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content ozzy-modal">
+
+      <div class="modal-body ozzy-modal-body text-center py-4">
+        <i class="bi bi-check-circle-fill ozzy-sucesso-icon"></i>
+        <div class="ozzy-modal-title mt-3">Peça Excluída</div>
+        <p class="ozzy-modal-warning mt-2">A peça foi removida com sucesso. Redirecionando...</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_head %}
+<style>
+  /* ── CARD DETALHE ───────────────────────────────── */
+  .ozzy-detail-card {
+    border-left: 3px solid var(--ozzy-accent) !important;
+  }
+
+  .ozzy-detail-id {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .8rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .ozzy-accent-text {
+    color: var(--ozzy-accent);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .ozzy-empty {
+    color: var(--ozzy-muted);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* ── BLOCO DE ATRIBUTO ──────────────────────────── */
+  .ozzy-attr-block {
+    background: var(--ozzy-bg);
+    border: 1px solid var(--ozzy-border);
+    border-radius: 6px;
+    padding: .9rem 1.1rem;
+    height: 100%;
+  }
+
+  .ozzy-attr-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ozzy-muted);
+    margin-bottom: .5rem;
+  }
+
+  .ozzy-attr-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #fff;
+    line-height: 1.1;
+  }
+
+  .ozzy-attr-unit {
+    font-size: .85rem;
+    color: var(--ozzy-muted);
+    font-weight: 400;
+  }
+
+  /* ── COR BADGE ──────────────────────────────────── */
+  .ozzy-cor-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .85rem;
+    letter-spacing: .05em;
+    padding: .25rem .7rem;
+    border-radius: 4px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid;
+    display: inline-block;
+  }
+
+  /* ── BADGES STATUS ──────────────────────────────── */
+  .ozzy-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .07em;
+    padding: .25rem .6rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .ozzy-badge--approved {
+    background: rgba(46,204,113,.12);
+    border: 1px solid rgba(46,204,113,.3);
+    color: #2ecc71;
+  }
+
+  .ozzy-badge--rejected {
+    background: rgba(231,76,60,.12);
+    border: 1px solid rgba(231,76,60,.3);
+    color: #e74c3c;
+  }
+
+  /* ── MOTIVOS ────────────────────────────────────── */
+  .ozzy-motivos-block {
+    background: rgba(231,76,60,.05);
+    border: 1px solid rgba(231,76,60,.2);
+    border-left: 3px solid #e74c3c;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .ozzy-motivos-title {
+    background: rgba(231,76,60,.08);
+    border-bottom: 1px solid rgba(231,76,60,.2);
+    padding: .7rem 1rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: .9rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #e74c3c;
+  }
+
+  .ozzy-motivos-body {
+    padding: .9rem 1rem;
+  }
+
+  .ozzy-motivos-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .ozzy-motivos-list li {
+    font-size: .85rem;
+    color: var(--ozzy-text);
+    padding: .25rem 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .ozzy-motivos-list li .bi-dot {
+    color: #e74c3c;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  /* ── BOTÃO EXCLUIR ──────────────────────────────── */
+  .ozzy-btn-excluir {
+    background: rgba(231,76,60,.1);
+    border: 1px solid rgba(231,76,60,.35);
+    color: #e74c3c;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: .9rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    padding: .45rem 1rem;
+    transition: background .2s, box-shadow .2s;
+  }
+
+  .ozzy-btn-excluir:hover {
+    background: rgba(231,76,60,.22);
+    box-shadow: 0 0 10px rgba(231,76,60,.2);
+    color: #e74c3c;
+  }
+
+  /* ── MODAIS ─────────────────────────────────────── */
+  .ozzy-modal {
+    background: var(--ozzy-surface);
+    border: 1px solid var(--ozzy-border);
+    border-radius: 8px;
+  }
+
+  .ozzy-modal-header {
+    border-bottom: 1px solid var(--ozzy-border);
+    padding: 1rem 1.25rem;
+  }
+
+  .ozzy-modal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #fff;
+  }
+
+  .ozzy-modal-body {
+    color: var(--ozzy-text);
+    font-size: .88rem;
+    padding: 1.4rem 1.25rem;
+  }
+
+  .ozzy-modal-body strong {
+    color: #fff;
+  }
+
+  .ozzy-modal-warning {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .72rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .04em;
+    margin-bottom: 0;
+  }
+
+  .ozzy-modal-footer {
+    border-top: 1px solid var(--ozzy-border);
+    padding: .85rem 1.25rem;
+  }
+
+  .ozzy-btn-excluir-confirmar {
+    background: #e74c3c;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 4px;
+    padding: .45rem 1.2rem;
+    transition: opacity .2s, box-shadow .2s;
+  }
+
+  .ozzy-btn-excluir-confirmar:hover {
+    opacity: .88;
+    box-shadow: 0 0 14px rgba(231,76,60,.35);
+    color: #fff;
+  }
+
+  .ozzy-sucesso-icon {
+    font-size: 2.8rem;
+    color: #2ecc71;
+    filter: drop-shadow(0 0 10px rgba(46,204,113,.4));
+  }
+</style>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+  const modalConfirmar = new bootstrap.Modal(document.getElementById('modalConfirmar'));
+  const modalSucesso   = new bootstrap.Modal(document.getElementById('modalSucesso'));
+  const PECA_ID        = {{ peca.id }};
+
+  function abrirConfirmacao() {
+    modalConfirmar.show();
+  }
+
+  async function confirmarExclusao() {
+    const btn = document.getElementById('btn-confirmar-exclusao');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Excluindo...';
+
+    try {
+      const response = await fetch(`/pecas/${PECA_ID}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.status === 204) {
+        modalConfirmar.hide();
+        modalSucesso.show();
+
+        // Redireciona para a página anterior após 2 segundos
+        setTimeout(function() {
+          const anterior = document.referrer;
+          if (anterior) {
+            window.location.href = anterior;
+          } else {
+            window.location.href = '/index';
+          }
+        }, 2000);
+
+      } else if (response.status === 404) {
+        modalConfirmar.hide();
+        alert('Peça não encontrada.');
+      } else {
+        alert('Erro ao excluir a peça. Tente novamente.');
+      }
+
+    } catch (err) {
+      console.error('Erro na requisição:', err);
+      alert('Erro de comunicação com o servidor.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Excluir Peça';
+    }
+  }
+</script>
+{% endblock %}

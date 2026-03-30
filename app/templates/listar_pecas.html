@@ -5,23 +5,6 @@
 
 {% block content %}
 
-{% set mapa_cores = {
-  'vermelho':   '#e74c3c',
-  'azul':       '#3498db',
-  'verde':      '#2ecc71',
-  'amarelo':    '#f1c40f',
-  'laranja':    '#e67e22',
-  'roxo':       '#9b59b6',
-  'rosa':       '#e91e8c',
-  'branco':     '#ecf0f1',
-  'preto':      '#2c3e50',
-  'cinza':      '#95a5a6',
-  'marrom':     '#a0522d',
-  'bege':       '#f5f0dc',
-  'dourado':    '#f5a623',
-  'prata':      '#bdc3c7',
-} %}
-
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
   <div class="ozzy-page-title mb-0" style="flex:1;">
     <i class="bi bi-check2-square" style="color: var(--ozzy-accent);"></i>
@@ -82,6 +65,7 @@
           <th>Status</th>
           <th>Caixa ID</th>
           <th>Motivos da Reprovação</th>
+          <th class="text-center"></th>
         </tr>
       </thead>
       <tbody>
@@ -92,8 +76,7 @@
             <td class="ozzy-idx">{{ loop.index + offset }}</td>
             <td>{{ peca.peso }}</td>
             <td>
-              {% set cor_hex = mapa_cores.get(peca.cor | lower, '#5a6075') %}
-              <span class="ozzy-cor-badge" style="color: {{ cor_hex }}; border-color: {{ cor_hex }};">
+              <span class="ozzy-cor-badge" style="--cor: {{ peca.cor | lower }};">
                 {{ peca.cor }}
               </span>
             </td>
@@ -128,12 +111,23 @@
                 <span class="ozzy-empty">—</span>
               {% endif %}
             </td>
+            <td class="text-center">
+              <a
+                href="{{ url_for('detalhar_peca', peca_id=peca.id) }}"
+                class="ozzy-btn-info"
+                title="Detalhes"
+                data-bs-toggle="tooltip"
+                data-bs-placement="left"
+              >
+                <i class="bi bi-info-circle-fill"></i>
+              </a>
+            </td>
           </tr>
           {% endfor %}
         {% else %}
           <tr>
-            <td colspan="8" class="text-center py-5 ozzy-empty-state">
-              <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: .5rem;"></i>
+            <td colspan="9" class="text-center py-5 ozzy-empty-state">
+              <i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:.5rem;"></i>
               Nenhuma peça cadastrada.
             </td>
           </tr>
@@ -274,7 +268,7 @@
     border-radius: 3px;
     background: rgba(255,255,255,.05);
     border: 1px solid var(--ozzy-border);
-    /*color: var(--ozzy-text);*/
+    color: var(--ozzy-text);
   }
 
   /* ── MOTIVOS ────────────────────────────────────── */
@@ -287,6 +281,24 @@
   .ozzy-motivo-item .bi-dot {
     font-size: .9rem;
     vertical-align: middle;
+  }
+
+  /* ── BOTÃO INFO ─────────────────────────────────── */
+  .ozzy-btn-info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    color: var(--ozzy-muted);
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: color .2s, background .2s;
+  }
+
+  .ozzy-btn-info:hover {
+    color: var(--ozzy-accent);
+    background: rgba(245,166,35,.1);
   }
 
   /* ── PAGINAÇÃO ──────────────────────────────────── */
@@ -330,4 +342,12 @@
     border-color: var(--ozzy-border);
   }
 </style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+    new bootstrap.Tooltip(el);
+  });
+</script>
 {% endblock %}

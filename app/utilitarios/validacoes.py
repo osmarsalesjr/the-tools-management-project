@@ -12,13 +12,13 @@ def main() -> None:
     pass
 
 
-def processar_validacao_peca(peca: dict) -> dict:
+def validar_peca(peca: dict, cor: dict) -> dict:
 
     if peca is None:
         return peca
 
     peso = peca["peso"]
-    cor = str(peca["cor"])
+    cor = cor["nome"]
     comprimento = peca["comprimento"]
     motivos_reprovacao = []
 

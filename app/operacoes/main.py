@@ -1,5 +1,5 @@
-from operacoes_pecas import (
-    criar_peca_validada,
+from app.utilitarios.pecas_utils import (
+    criar_peca,
     receber_numero_inteiro,
     receber_cor_peca
 )
@@ -12,7 +12,7 @@ from operacoes_banco_de_dados import (
     remover_peca,
     recuperar_caixas,
     recuperar_caixas_com_pecas,
-    buscar_caixa_para_nova_peca,
+    recuperar_ou_criar_caixa_para_nova_peca,
     popular_banco_de_dados_com_massa_de_testes,
     resetar_banco_de_dados
 )
@@ -113,10 +113,10 @@ def adicionar_peca() -> dict:
     cor = receber_cor_peca()
     comprimento = receber_numero_inteiro(TEXTO_ENTRADA_COMPRIMENTO_PECA)
 
-    peca = criar_peca_validada(peso, cor, comprimento)
+    peca = criar_peca(peso, cor, comprimento)
 
     if peca["status"].casefold() == STATUS_APROVADO.casefold():
-        caixa = buscar_caixa_para_nova_peca()
+        caixa = recuperar_ou_criar_caixa_para_nova_peca()
         caixa_id = caixa.get("id")
         peca["caixa_id"] = caixa_id
 

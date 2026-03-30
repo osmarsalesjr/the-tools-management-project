@@ -89,6 +89,7 @@
           <th>Caixa ID</th>
           <th>Motivos da Reprovação</th>
           <th class="text-center">Ação</th>
+          <th class="text-center"></th>
         </tr>
       </thead>
       <tbody>
@@ -144,11 +145,22 @@
                 <i class="bi bi-trash3 me-1"></i>Excluir
               </button>
             </td>
+            <td class="text-center">
+              <a
+                href="{{ url_for('detalhar_peca', peca_id=peca.id) }}"
+                class="ozzy-btn-info"
+                title="Detalhes"
+                data-bs-toggle="tooltip"
+                data-bs-placement="left"
+              >
+                <i class="bi bi-info-circle-fill"></i>
+              </a>
+            </td>
           </tr>
           {% endfor %}
         {% else %}
           <tr>
-            <td colspan="9" class="text-center py-5 ozzy-empty-state">
+            <td colspan="10" class="text-center py-5 ozzy-empty-state">
               <i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:.5rem;"></i>
               Nenhuma peça cadastrada.
             </td>
@@ -444,6 +456,24 @@
     border-color: var(--ozzy-border);
   }
 
+  /* ── BOTÃO INFO ─────────────────────────────────── */
+  .ozzy-btn-info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    color: var(--ozzy-muted);
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: color .2s, background .2s;
+  }
+
+  .ozzy-btn-info:hover {
+    color: var(--ozzy-accent);
+    background: rgba(245,166,35,.1);
+  }
+
   /* ── MODAIS ─────────────────────────────────────── */
   .ozzy-modal {
     background: var(--ozzy-surface);
@@ -527,6 +557,11 @@
   let pecaIdSelecionada = null;
   const modalConfirmar  = new bootstrap.Modal(document.getElementById('modalConfirmar'));
   const modalSucesso    = new bootstrap.Modal(document.getElementById('modalSucesso'));
+
+  // Inicializa tooltips
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+    new bootstrap.Tooltip(el);
+  });
 
   function abrirConfirmacao(pecaId) {
     pecaIdSelecionada = pecaId;
