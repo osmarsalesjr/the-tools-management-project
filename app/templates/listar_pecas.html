@@ -65,6 +65,7 @@
           <th>Status</th>
           <th>Caixa ID</th>
           <th>Motivos da Reprovação</th>
+          <th class="text-center">Ações</th>
           <th class="text-center"></th>
         </tr>
       </thead>
@@ -111,6 +112,28 @@
                 <span class="ozzy-empty">—</span>
               {% endif %}
             </td>
+            <td class="text-center" id="row-peca-{{ peca.id }}">
+              <div class="d-flex align-items-center justify-content-center gap-1">
+                <a
+                  href="{{ url_for('alterar_peca', peca_id=peca.id) }}"
+                  class="btn ozzy-btn-alterar btn-sm"
+                  title="Alterar Peça"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                >
+                  <i class="bi bi-pencil-square me-1"></i>Alterar
+                </a>
+                <button
+                  class="btn ozzy-btn-excluir btn-sm"
+                  onclick="abrirConfirmacao({{ peca.id }})"
+                  title="Excluir Peça"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                >
+                  <i class="bi bi-trash3 me-1"></i>Excluir
+                </button>
+              </div>
+            </td>
             <td class="text-center">
               <a
                 href="{{ url_for('detalhar_peca', peca_id=peca.id) }}"
@@ -126,7 +149,7 @@
           {% endfor %}
         {% else %}
           <tr>
-            <td colspan="9" class="text-center py-5 ozzy-empty-state">
+            <td colspan="10" class="text-center py-5 ozzy-empty-state">
               <i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:.5rem;"></i>
               Nenhuma peça cadastrada.
             </td>
@@ -169,6 +192,50 @@
   {% endif %}
 
 </div><!-- /card -->
+
+<!-- ═══ MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ════════════════ -->
+<div class="modal fade" id="modalConfirmar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content ozzy-modal">
+      <div class="modal-header ozzy-modal-header">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+          <span class="ozzy-modal-title">Confirmar Exclusão</span>
+        </div>
+      </div>
+      <div class="modal-body ozzy-modal-body">
+        <p>Tem certeza que deseja excluir a peça <strong id="modal-peca-id" class="ozzy-accent-text"></strong>?</p>
+        <p class="ozzy-modal-warning">Esta ação é permanente e não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer ozzy-modal-footer">
+        <button type="button" class="btn-ozzy-outline btn" data-bs-dismiss="modal">
+          <i class="bi bi-x me-1"></i>Cancelar
+        </button>
+        <button type="button" class="btn ozzy-btn-excluir-confirmar" id="btn-confirmar-exclusao" onclick="confirmarExclusao()">
+          <i class="bi bi-trash3 me-1"></i>Excluir Peça
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL DE SUCESSO ═════════════════════════════════ -->
+<div class="modal fade" id="modalSucesso" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content ozzy-modal">
+      <div class="modal-body ozzy-modal-body text-center py-4">
+        <i class="bi bi-check-circle-fill ozzy-sucesso-icon"></i>
+        <div class="ozzy-modal-title mt-3">Peça Excluída</div>
+        <p class="ozzy-modal-warning mt-2">A peça foi removida com sucesso.</p>
+      </div>
+      <div class="modal-footer ozzy-modal-footer justify-content-center">
+        <button type="button" class="btn-ozzy-outline btn" onclick="fecharSucesso()">
+          <i class="bi bi-check me-1"></i>OK
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
@@ -301,6 +368,130 @@
     background: rgba(245,166,35,.1);
   }
 
+  /* ── BOTÃO ALTERAR ──────────────────────────────── */
+  .ozzy-btn-alterar {
+    background: rgba(52,152,219,.1);
+    border: 1px solid rgba(52,152,219,.35);
+    color: #3498db;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: .78rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    padding: .25rem .7rem;
+    text-decoration: none;
+    transition: background .2s, box-shadow .2s;
+    white-space: nowrap;
+  }
+
+  .ozzy-btn-alterar:hover {
+    background: rgba(52,152,219,.22);
+    box-shadow: 0 0 10px rgba(52,152,219,.2);
+    color: #3498db;
+  }
+
+  /* ── BOTÃO EXCLUIR ──────────────────────────────── */
+  .ozzy-btn-excluir {
+    background: rgba(231,76,60,.1);
+    border: 1px solid rgba(231,76,60,.35);
+    color: #e74c3c;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: .78rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border-radius: 4px;
+    padding: .25rem .7rem;
+    transition: background .2s, box-shadow .2s;
+    white-space: nowrap;
+  }
+
+  .ozzy-btn-excluir:hover {
+    background: rgba(231,76,60,.22);
+    box-shadow: 0 0 10px rgba(231,76,60,.2);
+    color: #e74c3c;
+  }
+
+  /* ── MODAIS ─────────────────────────────────────── */
+  .ozzy-modal {
+    background: var(--ozzy-surface);
+    border: 1px solid var(--ozzy-border);
+    border-radius: 8px;
+  }
+
+  .ozzy-modal-header {
+    border-bottom: 1px solid var(--ozzy-border);
+    padding: 1rem 1.25rem;
+  }
+
+  .ozzy-modal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #fff;
+  }
+
+  .ozzy-modal-body {
+    color: var(--ozzy-text);
+    font-size: .88rem;
+    padding: 1.4rem 1.25rem;
+  }
+
+  .ozzy-modal-body strong { color: #fff; }
+
+  .ozzy-modal-warning {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .72rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .04em;
+    margin-bottom: 0;
+  }
+
+  .ozzy-modal-footer {
+    border-top: 1px solid var(--ozzy-border);
+    padding: .85rem 1.25rem;
+  }
+
+  .ozzy-accent-text {
+    color: var(--ozzy-accent);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .ozzy-btn-excluir-confirmar {
+    background: #e74c3c;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 4px;
+    padding: .45rem 1.2rem;
+    transition: opacity .2s, box-shadow .2s;
+  }
+
+  .ozzy-btn-excluir-confirmar:hover {
+    opacity: .88;
+    box-shadow: 0 0 14px rgba(231,76,60,.35);
+    color: #fff;
+  }
+
+  .ozzy-sucesso-icon {
+    font-size: 2.8rem;
+    color: #2ecc71;
+    filter: drop-shadow(0 0 10px rgba(46,204,113,.4));
+  }
+
+  .ozzy-row-removing {
+    opacity: .4;
+    pointer-events: none;
+    transition: opacity .3s;
+  }
+
   /* ── PAGINAÇÃO ──────────────────────────────────── */
   .ozzy-pag-info {
     font-family: 'Share Tech Mono', monospace;
@@ -346,8 +537,56 @@
 
 {% block extra_scripts %}
 <script>
+  let pecaIdSelecionada = null;
+  const modalConfirmar  = new bootstrap.Modal(document.getElementById('modalConfirmar'));
+  const modalSucesso    = new bootstrap.Modal(document.getElementById('modalSucesso'));
+
   document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
     new bootstrap.Tooltip(el);
   });
+
+  function abrirConfirmacao(pecaId) {
+    pecaIdSelecionada = pecaId;
+    document.getElementById('modal-peca-id').textContent = '#' + pecaId;
+    modalConfirmar.show();
+  }
+
+  async function confirmarExclusao() {
+    if (!pecaIdSelecionada) return;
+
+    const btn = document.getElementById('btn-confirmar-exclusao');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Excluindo...';
+
+    try {
+      const response = await fetch(`/pecas/${pecaIdSelecionada}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.status === 204) {
+        modalConfirmar.hide();
+        const row = document.getElementById('row-peca-' + pecaIdSelecionada);
+        if (row) {
+          const tr = row.closest('tr');
+          if (tr) { tr.classList.add('ozzy-row-removing'); setTimeout(() => tr.remove(), 300); }
+        }
+        modalSucesso.show();
+      } else {
+        alert('Erro ao excluir a peça. Tente novamente.');
+      }
+    } catch (err) {
+      console.error('Erro na requisição:', err);
+      alert('Erro de comunicação com o servidor.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Excluir Peça';
+      pecaIdSelecionada = null;
+    }
+  }
+
+  function fecharSucesso() {
+    modalSucesso.hide();
+  }
 </script>
 {% endblock %}

@@ -1,10 +1,10 @@
 
-from utilitarios.validacoes import (
+from utilitarios.constantes import (
     STATUS_APROVADO,
     STATUS_REPROVADO,
-    MOTIVO_REPROVADO_POR_PESO,
-    MOTIVO_REPROVADO_POR_COR,
     MOTIVO_REPROVADO_POR_COMPRIMENTO,
+    MOTIVO_REPROVADO_POR_COR,
+    MOTIVO_REPROVADO_POR_PESO
 )
 
 lista_de_pecas = [

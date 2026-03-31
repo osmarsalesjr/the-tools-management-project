@@ -1,8 +1,9 @@
 
-from operacoes.operacoes_banco_de_dados import (
+from dao.operacoes_banco_de_dados import (
     conectar_banco_de_dados,
     desconectar_banco_de_dados,
     recuperar_todas_as_pecas,
+    recuperar_caixas,
     recuperar_caixas_com_pecas,
     recuperar_ou_criar_caixa_para_nova_peca,
     recuperar_peca_por_id,
@@ -10,6 +11,9 @@ from operacoes.operacoes_banco_de_dados import (
     recuperar_todas_as_cores,
     recuperar_cor_por_id,
     salvar_peca,
+    recuperar_caixas_por_status,
+    recuperar_pecas_por_status,
+    atualizar_peca,
 )
 
 
@@ -29,20 +33,29 @@ def guardar_peca(peca: dict) -> dict:
     return salvar_peca(peca)
 
 
+def alterar_cadastro_peca(peca: dict) -> None:
+    atualizar_peca(peca)
+
+
 def buscar_todas_as_pecas() -> list[dict]:
     return recuperar_todas_as_pecas()
+
+
+def buscar_pecas_por_status(status: str) -> list[dict]:
+    return recuperar_pecas_por_status(status)
 
 
 def buscar_caixas_com_pecas() -> list[dict]:
     return recuperar_caixas_com_pecas()
 
 
-def buscar_caixas_fechadas_com_pecas() -> list[dict]:
+def buscar_todas_as_caixas() -> list[dict]:
+    return recuperar_caixas()
 
-    caixas = recuperar_caixas_com_pecas()
-    caixas_fechadas = [caixa for caixa in caixas if caixa["esta_fechada"]]
-    
-    return caixas_fechadas
+
+def buscar_caixas_com_pecas_por_status(esta_fechada: int) -> list[dict]:
+
+    return recuperar_caixas_por_status(esta_fechada)
 
 
 def buscar_ou_criar_caixa_para_nova_peca() -> dict:

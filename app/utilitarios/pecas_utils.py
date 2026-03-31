@@ -1,5 +1,3 @@
-from utilitarios.validacoes import validar_peca
-
 
 def main() -> None:
     pass

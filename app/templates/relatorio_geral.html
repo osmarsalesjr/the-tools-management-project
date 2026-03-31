@@ -1,0 +1,753 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório Geral — Ozzy{% endblock %}
+{% block breadcrumb %}RELATÓRIO / GERAL{% endblock %}
+
+{% block content %}
+
+{% set mapa_cores = {
+  'vermelho':   '#e74c3c',
+  'azul':       '#3498db',
+  'verde':      '#2ecc71',
+  'amarelo':    '#f1c40f',
+  'laranja':    '#e67e22',
+  'roxo':       '#9b59b6',
+  'rosa':       '#e91e8c',
+  'branco':     '#ecf0f1',
+  'preto':      '#2c3e50',
+  'cinza':      '#95a5a6',
+  'marrom':     '#a0522d',
+  'bege':       '#f5f0dc',
+  'dourado':    '#f5a623',
+  'prata':      '#bdc3c7',
+} %}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div class="ozzy-page-title mb-0" style="flex:1;">
+    <i class="bi bi-file-earmark-bar-graph" style="color: var(--ozzy-accent);"></i>
+    Relatório Geral
+  </div>
+  <a href="{{ url_for('index') }}" class="btn-ozzy-outline btn">
+    <i class="bi bi-arrow-left me-1"></i> Voltar
+  </a>
+</div>
+
+<!-- Totalizadores rápidos -->
+<div class="row g-2 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="ozzy-stat-card">
+      <div class="ozzy-stat-value">{{ pecas_aprovadas | length + pecas_reprovadas | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-layers me-1"></i>Total de Peças</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="ozzy-stat-card ozzy-stat-card--approved">
+      <div class="ozzy-stat-value">{{ pecas_aprovadas | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-check-circle me-1"></i>Aprovadas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="ozzy-stat-card ozzy-stat-card--rejected">
+      <div class="ozzy-stat-value">{{ pecas_reprovadas | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-x-circle me-1"></i>Reprovadas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="ozzy-stat-card ozzy-stat-card--box">
+      <div class="ozzy-stat-value">{{ total_caixas_utilizadas }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-box-seam me-1"></i>Caixas Utilizadas</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ SEÇÃO: PEÇAS APROVADAS ═══════════════════════════ -->
+<div class="ozzy-section ozzy-section--approved mb-3">
+  <div class="ozzy-section-header" onclick="toggleSecao('aprovadas')">
+    <div class="d-flex align-items-center gap-3">
+      <div class="ozzy-section-icon ozzy-section-icon--approved">
+        <i class="bi bi-check-circle-fill"></i>
+      </div>
+      <div>
+        <div class="ozzy-section-title">Peças Aprovadas</div>
+        <div class="ozzy-section-sub">{{ pecas_aprovadas | length }} peça(s) aprovada(s)</div>
+      </div>
+    </div>
+    <button class="btn-ozzy-outline btn btn-sm ozzy-section-btn" id="btn-aprovadas">
+      <i class="bi bi-chevron-down me-1" id="icon-aprovadas"></i>
+      <span id="label-aprovadas">Exibir</span>
+    </button>
+  </div>
+
+  <div class="ozzy-section-body" id="body-aprovadas">
+    {% if pecas_aprovadas %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0 ozzy-inner-table" id="table-aprovadas">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Peso (g)</th>
+              <th>Cor</th>
+              <th>Comprimento (cm)</th>
+              <th>Caixa ID</th>
+              <th class="text-center"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-aprovadas">
+            {% for peca in pecas_aprovadas %}
+            <tr class="ozzy-peca-row-aprovadas" data-page="0" style="display:none;">
+              <td class="ozzy-mono">{{ peca.id }}</td>
+              <td class="ozzy-cell-dark">{{ peca.peso }}</td>
+              <td>
+                {% set cor_hex = mapa_cores.get(peca.cor | lower, '#5a6075') %}
+                <span class="ozzy-cor-badge" style="color: {{ cor_hex }}; border-color: {{ cor_hex }};">
+                  {{ peca.cor }}
+                </span>
+              </td>
+              <td class="ozzy-cell-dark">{{ peca.comprimento }}</td>
+              <td class="ozzy-mono">{{ peca.caixa_id if peca.caixa_id else '—' }}</td>
+              <td class="text-center">
+                <a href="{{ url_for('detalhar_peca', peca_id=peca.id) }}"
+                   class="ozzy-btn-info" title="Detalhes"
+                   data-bs-toggle="tooltip" data-bs-placement="left">
+                  <i class="bi bi-info-circle-fill"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- Paginação aprovadas -->
+      <div class="d-flex align-items-center justify-content-between px-3 py-2 ozzy-pag-bar">
+        <span class="ozzy-pag-info" id="pag-info-aprovadas"></span>
+        <nav>
+          <ul class="pagination ozzy-pagination mb-0" id="pag-aprovadas"></ul>
+        </nav>
+      </div>
+    {% else %}
+      <div class="ozzy-empty-panel">
+        <i class="bi bi-inbox"></i> Nenhuma peça aprovada encontrada.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+
+<!-- ═══ SEÇÃO: PEÇAS REPROVADAS ══════════════════════════ -->
+<div class="ozzy-section ozzy-section--rejected mb-3">
+  <div class="ozzy-section-header" onclick="toggleSecao('reprovadas')">
+    <div class="d-flex align-items-center gap-3">
+      <div class="ozzy-section-icon ozzy-section-icon--rejected">
+        <i class="bi bi-x-circle-fill"></i>
+      </div>
+      <div>
+        <div class="ozzy-section-title">Peças Reprovadas</div>
+        <div class="ozzy-section-sub">{{ pecas_reprovadas | length }} peça(s) reprovada(s)</div>
+      </div>
+    </div>
+    <button class="btn-ozzy-outline btn btn-sm ozzy-section-btn ozzy-section-btn--rejected" id="btn-reprovadas">
+      <i class="bi bi-chevron-down me-1" id="icon-reprovadas"></i>
+      <span id="label-reprovadas">Exibir</span>
+    </button>
+  </div>
+
+  <div class="ozzy-section-body" id="body-reprovadas">
+    {% if pecas_reprovadas %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0 ozzy-inner-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Peso (g)</th>
+              <th>Cor</th>
+              <th>Comprimento (cm)</th>
+              <th>Motivos da Reprovação</th>
+              <th class="text-center"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-reprovadas">
+            {% for peca in pecas_reprovadas %}
+            <tr class="ozzy-peca-row-reprovadas" data-page="0" style="display:none;">
+              <td class="ozzy-mono">{{ peca.id }}</td>
+              <td class="ozzy-cell-dark">{{ peca.peso }}</td>
+              <td>
+                {% set cor_hex = mapa_cores.get(peca.cor | lower, '#5a6075') %}
+                <span class="ozzy-cor-badge" style="color: {{ cor_hex }}; border-color: {{ cor_hex }};">
+                  {{ peca.cor }}
+                </span>
+              </td>
+              <td class="ozzy-cell-dark">{{ peca.comprimento }}</td>
+              <td class="ozzy-motivos">
+                {% if peca.motivos_reprovacao %}
+                  {% for motivo in peca.motivos_reprovacao %}
+                    <span class="ozzy-motivo-item"><i class="bi bi-dot"></i>{{ motivo }}</span>
+                    {% if not loop.last %}<br>{% endif %}
+                  {% endfor %}
+                {% else %}
+                  <span class="ozzy-empty">—</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <a href="{{ url_for('detalhar_peca', peca_id=peca.id) }}"
+                   class="ozzy-btn-info" title="Detalhes"
+                   data-bs-toggle="tooltip" data-bs-placement="left">
+                  <i class="bi bi-info-circle-fill"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- Paginação reprovadas -->
+      <div class="d-flex align-items-center justify-content-between px-3 py-2 ozzy-pag-bar">
+        <span class="ozzy-pag-info" id="pag-info-reprovadas"></span>
+        <nav>
+          <ul class="pagination ozzy-pagination mb-0" id="pag-reprovadas"></ul>
+        </nav>
+      </div>
+    {% else %}
+      <div class="ozzy-empty-panel">
+        <i class="bi bi-inbox"></i> Nenhuma peça reprovada encontrada.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+
+<!-- ═══ SEÇÃO: CAIXAS UTILIZADAS ═════════════════════════ -->
+<div class="ozzy-section ozzy-section--box mb-3">
+  <div class="ozzy-section-header" onclick="toggleSecao('caixas')">
+    <div class="d-flex align-items-center gap-3">
+      <div class="ozzy-section-icon ozzy-section-icon--box">
+        <i class="bi bi-box-seam-fill"></i>
+      </div>
+      <div>
+        <div class="ozzy-section-title">Caixas Utilizadas</div>
+        <div class="ozzy-section-sub">{{ total_caixas_utilizadas }} caixa(s) no total</div>
+      </div>
+    </div>
+    <button class="btn-ozzy-outline btn btn-sm ozzy-section-btn ozzy-section-btn--box" id="btn-caixas">
+      <i class="bi bi-chevron-down me-1" id="icon-caixas"></i>
+      <span id="label-caixas">Exibir</span>
+    </button>
+  </div>
+
+  <div class="ozzy-section-body" id="body-caixas">
+    <div class="row g-3 p-3">
+      <div class="col-12 col-md-4">
+        <div class="ozzy-caixa-stat">
+          <div class="ozzy-caixa-stat-value">{{ total_caixas_utilizadas }}</div>
+          <div class="ozzy-caixa-stat-label"><i class="bi bi-box me-1"></i>Total de Caixas</div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="ozzy-caixa-stat ozzy-caixa-stat--closed">
+          <div class="ozzy-caixa-stat-value">{{ quantidade_caixas_fechadas }}</div>
+          <div class="ozzy-caixa-stat-label"><i class="bi bi-lock-fill me-1"></i>Caixas Fechadas</div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="ozzy-caixa-stat ozzy-caixa-stat--open">
+          <div class="ozzy-caixa-stat-value">{{ quantidade_caixas_abertas }}</div>
+          <div class="ozzy-caixa-stat-label"><i class="bi bi-lock-open me-1"></i>Caixas Abertas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EXPORTAR PLANILHA ════════════════════════════════ -->
+<div class="d-flex justify-content-end mt-4">
+  <button class="btn-ozzy btn ozzy-btn-export" onclick="exportarPlanilha()">
+    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar Planilha
+  </button>
+</div>
+
+{% endblock %}
+
+
+{% block extra_head %}
+<style>
+  /* ── STAT CARDS ─────────────────────────────────── */
+  .ozzy-stat-card {
+    background: var(--ozzy-surface);
+    border: 1px solid var(--ozzy-border);
+    border-left: 3px solid var(--ozzy-accent);
+    border-radius: 6px; 
+    padding: .85rem 1.1rem;
+    text-align: center;
+  }
+  .ozzy-stat-card--approved { border-left-color: #2ecc71; }
+  .ozzy-stat-card--rejected { border-left-color: #e74c3c; }
+  .ozzy-stat-card--box      { border-left-color: #3498db; }
+
+  .ozzy-stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.9rem;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .ozzy-stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ozzy-muted);
+    margin-top: 4px;
+  }
+
+  /* ── SEÇÕES ─────────────────────────────────────── */
+  .ozzy-section {
+    border: 1px solid var(--ozzy-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--ozzy-surface);
+  }
+
+  .ozzy-section--approved { border-left: 3px solid #2ecc71; }
+  .ozzy-section--rejected  { border-left: 3px solid #e74c3c; }
+  .ozzy-section--box       { border-left: 3px solid #3498db; }
+
+  .ozzy-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s;
+  }
+
+  .ozzy-section-header:hover { background: rgba(255,255,255,.02); }
+
+  .ozzy-section-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .ozzy-section-icon--approved { background: rgba(46,204,113,.12); color: #2ecc71; }
+  .ozzy-section-icon--rejected  { background: rgba(231,76,60,.12);  color: #e74c3c; }
+  .ozzy-section-icon--box       { background: rgba(52,152,219,.12); color: #3498db; }
+
+  .ozzy-section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #fff;
+  }
+
+  .ozzy-section-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .05em;
+    margin-top: 2px;
+  }
+
+  .ozzy-section-btn {
+    font-size: .75rem;
+    padding: .3rem .8rem;
+    flex-shrink: 0;
+    transition: background .2s, color .2s, border-color .2s;
+  }
+
+  .ozzy-section-btn.is-open {
+    background: #2ecc71;
+    color: #0d0f14;
+    border-color: #2ecc71;
+  }
+
+  .ozzy-section-btn--rejected.is-open {
+    background: #e74c3c;
+    border-color: #e74c3c;
+  }
+
+  .ozzy-section-btn--box.is-open {
+    background: #3498db;
+    border-color: #3498db;
+  }
+
+  /* ── CORPO DA SEÇÃO ─────────────────────────────── */
+  .ozzy-section-body {
+    display: none;
+    border-top: 1px solid var(--ozzy-border);
+    animation: slideDown .2s ease;
+  }
+
+  .ozzy-section-body.is-open { display: block; }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── TABELA INTERNA ─────────────────────────────── */
+  .ozzy-inner-table { background: transparent; }
+
+  .ozzy-inner-table thead th {
+    background: rgba(255,255,255,.03) !important;
+    color: var(--ozzy-accent) !important;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    border-color: var(--ozzy-border) !important;
+    padding: .5rem 1rem;
+  }
+
+  .ozzy-inner-table td {
+    padding: .45rem 1rem;
+    font-size: .82rem;
+    color: var(--ozzy-text);
+    border-color: var(--ozzy-border) !important;
+  }
+
+  .ozzy-inner-table td.ozzy-cell-dark {
+    color: #141720 !important;
+  }
+
+  .ozzy-inner-table tbody tr:hover td {
+    background: rgba(255,255,255,.02) !important;
+  }
+
+  /* ── MISC ───────────────────────────────────────── */
+  .ozzy-mono {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .8rem;
+    color: var(--ozzy-accent);
+  }
+
+  .ozzy-inner-table td {
+    padding: .45rem 1rem;
+    font-size: .82rem;
+    color: var(--ozzy-text) !important;
+    border-color: var(--ozzy-border) !important;
+  }
+
+  .ozzy-inner-table td.ozzy-mono {
+    color: var(--ozzy-accent) !important;
+  }
+
+  .ozzy-empty { color: var(--ozzy-muted); font-family: 'Share Tech Mono', monospace; }
+
+  .ozzy-cor-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .72rem;
+    padding: .18rem .5rem;
+    border-radius: 3px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid;
+  }
+
+  .ozzy-motivo-item { font-size: .78rem; color: #e74c3c; display: inline; }
+  .ozzy-motivo-item .bi-dot { font-size: .9rem; vertical-align: middle; }
+
+  .ozzy-btn-info {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    color: var(--ozzy-muted);
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: color .2s, background .2s;
+  }
+
+  .ozzy-btn-info:hover {
+    color: var(--ozzy-accent);
+    background: rgba(245,166,35,.1);
+  }
+
+  /* ── PAGINAÇÃO INTERNA ──────────────────────────── */
+  .ozzy-pag-bar {
+    border-top: 1px solid var(--ozzy-border);
+    background: rgba(255,255,255,.01);
+  }
+
+  .ozzy-pag-info {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .06em;
+  }
+
+  .ozzy-pagination .page-link {
+    background: var(--ozzy-bg);
+    border-color: var(--ozzy-border);
+    color: var(--ozzy-muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    padding: .25rem .55rem;
+    transition: background .15s, color .15s;
+  }
+
+  .ozzy-pagination .page-link:hover {
+    background: rgba(245,166,35,.1);
+    color: var(--ozzy-accent);
+    border-color: var(--ozzy-accent);
+  }
+
+  .ozzy-pagination .page-item.active .page-link {
+    background: var(--ozzy-accent);
+    border-color: var(--ozzy-accent);
+    color: #0d0f14;
+    font-weight: 700;
+  }
+
+  .ozzy-pagination .page-item.disabled .page-link {
+    background: var(--ozzy-surface);
+    color: var(--ozzy-border);
+    border-color: var(--ozzy-border);
+  }
+
+  /* ── STATS DE CAIXAS ────────────────────────────── */
+  .ozzy-caixa-stat {
+    background: var(--ozzy-bg);
+    border: 1px solid var(--ozzy-border);
+    border-left: 3px solid #3498db;
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    text-align: center;
+  }
+
+  .ozzy-caixa-stat--closed { border-left-color: #e74c3c; }
+  .ozzy-caixa-stat--open   { border-left-color: #2ecc71; }
+
+  .ozzy-caixa-stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 2.2rem;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .ozzy-caixa-stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ozzy-muted);
+    margin-top: 5px;
+  }
+
+  /* ── PAINEL VAZIO ───────────────────────────────── */
+  .ozzy-empty-panel {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: 1.2rem 1.5rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .05em;
+  }
+
+  /* ── BOTÃO EXPORTAR ─────────────────────────────── */
+  .ozzy-btn-export {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: #0d0f14;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: .95rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 4px;
+    padding: .5rem 1.4rem;
+    transition: opacity .2s, box-shadow .2s;
+  }
+
+  .ozzy-btn-export:hover {
+    opacity: .88;
+    box-shadow: 0 0 14px rgba(46,204,113,.35);
+    color: #0d0f14;
+  }
+</style>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+  const POR_PAGINA = 10;
+
+  // ── TOGGLE SEÇÕES ──────────────────────────────────
+  function toggleSecao(id) {
+    const body  = document.getElementById('body-' + id);
+    const btn   = document.getElementById('btn-' + id);
+    const icon  = document.getElementById('icon-' + id);
+    const label = document.getElementById('label-' + id);
+
+    const isOpen = body.classList.toggle('is-open');
+    btn.classList.toggle('is-open', isOpen);
+    icon.className = isOpen ? 'bi bi-chevron-up me-1' : 'bi bi-chevron-down me-1';
+    label.textContent = isOpen ? 'Ocultar' : 'Exibir';
+
+    // Inicializa paginação na primeira abertura
+    if (isOpen && (id === 'aprovadas' || id === 'reprovadas')) {
+      renderPagina(id, 1);
+    }
+  }
+
+  // ── PAGINAÇÃO ──────────────────────────────────────
+  function renderPagina(tipo, pagina) {
+    const rows        = document.querySelectorAll('.ozzy-peca-row-' + tipo);
+    const total       = rows.length;
+    const totalPags   = Math.max(1, Math.ceil(total / POR_PAGINA));
+    const paginaAtual = Math.min(Math.max(1, pagina), totalPags);
+    const inicio      = (paginaAtual - 1) * POR_PAGINA;
+    const fim         = Math.min(inicio + POR_PAGINA, total);
+
+    // Exibe apenas as linhas da página atual
+    rows.forEach(function(row, idx) {
+      row.style.display = (idx >= inicio && idx < fim) ? '' : 'none';
+    });
+
+    // Info de paginação
+    document.getElementById('pag-info-' + tipo).textContent =
+      'Pág. ' + paginaAtual + ' de ' + totalPags + ' · ' + (fim - inicio) + ' de ' + total + ' registros';
+
+    // Botões de página
+    const nav = document.getElementById('pag-' + tipo);
+    nav.innerHTML = '';
+
+    // Anterior
+    const liAnterior = criarPageItem(
+      '<i class="bi bi-chevron-left"></i>',
+      paginaAtual === 1,
+      false,
+      function() { renderPagina(tipo, paginaAtual - 1); }
+    );
+    nav.appendChild(liAnterior);
+
+    // Páginas
+    for (let p = 1; p <= totalPags; p++) {
+      const li = criarPageItem(p, false, p === paginaAtual, function(pg) {
+        return function() { renderPagina(tipo, pg); };
+      }(p));
+      nav.appendChild(li);
+    }
+
+    // Próxima
+    const liProxima = criarPageItem(
+      '<i class="bi bi-chevron-right"></i>',
+      paginaAtual === totalPags,
+      false,
+      function() { renderPagina(tipo, paginaAtual + 1); }
+    );
+    nav.appendChild(liProxima);
+
+    // Inicializa tooltips nas linhas visíveis
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+      if (!el._tooltipInstance) {
+        el._tooltipInstance = new bootstrap.Tooltip(el);
+      }
+    });
+  }
+
+  function criarPageItem(conteudo, disabled, active, onClick) {
+    const li = document.createElement('li');
+    li.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+
+    const a = document.createElement('a');
+    a.className = 'page-link';
+    a.href = '#';
+    a.innerHTML = conteudo;
+
+    if (!disabled) {
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        onClick();
+      });
+    }
+
+    li.appendChild(a);
+    return li;
+  }
+
+  // ── EXPORTAR PLANILHA ──────────────────────────────
+  function exportarPlanilha() {
+
+    const linhas = [];
+
+    // Cabeçalho geral
+    linhas.push(['RELATÓRIO GERAL — OZZY']);
+    linhas.push(['Gerado em:', new Date().toLocaleString('pt-BR')]);
+    linhas.push([]);
+
+    // ── Peças Aprovadas
+    linhas.push(['PEÇAS APROVADAS']);
+    linhas.push(['ID', 'Peso (g)', 'Cor', 'Comprimento (cm)', 'Caixa ID']);
+
+    document.querySelectorAll('.ozzy-peca-row-aprovadas').forEach(function(row) {
+      const cells = row.querySelectorAll('td');
+      linhas.push([
+        cells[0].textContent.trim(),
+        cells[1].textContent.trim(),
+        cells[2].textContent.trim(),
+        cells[3].textContent.trim(),
+        cells[4].textContent.trim(),
+      ]);
+    });
+
+    linhas.push([]);
+
+    // ── Peças Reprovadas
+    linhas.push(['PEÇAS REPROVADAS']);
+    linhas.push(['ID', 'Peso (g)', 'Cor', 'Comprimento (cm)', 'Motivos da Reprovação']);
+
+    document.querySelectorAll('.ozzy-peca-row-reprovadas').forEach(function(row) {
+      const cells = row.querySelectorAll('td');
+      const motivos = cells[4].textContent.replace(/\s+/g, ' ').trim();
+      linhas.push([
+        cells[0].textContent.trim(),
+        cells[1].textContent.trim(),
+        cells[2].textContent.trim(),
+        cells[3].textContent.trim(),
+        motivos,
+      ]);
+    });
+
+    linhas.push([]);
+
+    // ── Caixas
+    linhas.push(['CAIXAS UTILIZADAS']);
+    linhas.push(['Total', 'Fechadas', 'Abertas']);
+
+    const statValues = document.querySelectorAll('.ozzy-caixa-stat-value');
+    linhas.push([
+      statValues[0] ? statValues[0].textContent.trim() : '',
+      statValues[1] ? statValues[1].textContent.trim() : '',
+      statValues[2] ? statValues[2].textContent.trim() : '',
+    ]);
+
+    // ── Gera CSV e dispara download
+    const csv = linhas.map(function(linha) {
+      return linha.map(function(cel) {
+        const valor = String(cel).replace(/"/g, '""');
+        return '"' + valor + '"';
+      }).join(';');
+    }).join('\r\n');
+
+    const bom  = '\uFEFF'; // BOM para UTF-8 no Excel
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'relatorio_ozzy_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+</script>
+{% endblock %}

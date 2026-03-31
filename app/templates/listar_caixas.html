@@ -5,6 +5,23 @@
 
 {% block content %}
 
+{% set mapa_cores = {
+  'vermelho':   '#e74c3c',
+  'azul':       '#3498db',
+  'verde':      '#2ecc71',
+  'amarelo':    '#f1c40f',
+  'laranja':    '#e67e22',
+  'roxo':       '#9b59b6',
+  'rosa':       '#e91e8c',
+  'branco':     '#ecf0f1',
+  'preto':      '#2c3e50',
+  'cinza':      '#95a5a6',
+  'marrom':     '#a0522d',
+  'bege':       '#f5f0dc',
+  'dourado':    '#f5a623',
+  'prata':      '#bdc3c7',
+} %}
+
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
   <div class="ozzy-page-title mb-0" style="flex:1;">
     <i class="bi bi-boxes" style="color: var(--ozzy-accent);"></i>
@@ -107,7 +124,7 @@
                         <th>ID Peça</th>
                         <th>Peso (g)</th>
                         <th>Cor</th>
-                        <th>Comprimento (mm)</th>
+                        <th>Comprimento (cm)</th>
                         <th>Status</th>
                         <th class="text-center"></th>
                       </tr>
@@ -118,7 +135,10 @@
                         <td class="ozzy-mono">{{ peca.id }}</td>
                         <td>{{ peca.peso }}</td>
                         <td>
-                          <span class="ozzy-cor-badge">{{ peca.cor }}</span>
+                          {% set cor_hex = mapa_cores.get(peca.cor | lower, '#5a6075') %}
+                          <span class="ozzy-cor-badge" style="color: {{ cor_hex }}; border-color: {{ cor_hex }};">
+                            {{ peca.cor }}
+                          </span>
                         </td>
                         <td>{{ peca.comprimento }}</td>
                         <td>
@@ -303,7 +323,7 @@
     border-radius: 3px;
     background: rgba(255,255,255,.05);
     border: 1px solid var(--ozzy-border);
-    color: var(--ozzy-text);
+    /*color: var(--ozzy-text);*/
   }
 
   /* ── BOTÃO TOGGLE ───────────────────────────────── */

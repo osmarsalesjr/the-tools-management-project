@@ -4,10 +4,8 @@ import json
 
 from flask import g
 
-from operacoes.massa_dados_testes import pegar_massa_lista_pecas
-
-
-STATUS_APROVADO = "APROVADO"
+from dao.massa_dados_testes import pegar_massa_lista_pecas
+from utilitarios.constantes import STATUS_APROVADO
 
 SCRIPT = """
 CREATE TABLE IF NOT EXISTS caixa (
@@ -186,6 +184,43 @@ def atualizar_caixa(caixa_id: int, status: int) -> None:
         raise
 
 
+def atualizar_peca(peca: dict) -> None:
+    global cursor, con
+
+    peca_id = peca["id"]
+    peso = peca["peso"]
+    cor_id = peca["cor_id"]
+    comprimento = peca["comprimento"]
+    status = peca["status"]
+    motivos_reprovacao = json.dumps(peca["motivos_reprovacao"])
+    caixa_id = peca.get("caixa_id")
+
+    try:
+        
+        cursor.execute("""
+            UPDATE peca SET caixa_id = ?, peso = ?, cor_id = ?, comprimento = ?, status = ?, motivos_reprovacao = ?
+            WHERE id = ?
+        """, (caixa_id, peso, cor_id, comprimento, status, motivos_reprovacao, peca_id,))
+
+        con.commit()
+
+        if caixa_id is not None:
+            quantidade_pecas = contar_pecas_por_caixa(caixa_id)
+
+            if quantidade_pecas >= 10:
+                atualizar_caixa(caixa_id, int(True))
+                print(f"Caixa ID {caixa_id} está FECHADA.")
+
+            if quantidade_pecas < 10:
+                atualizar_caixa(caixa_id, int(False))
+                print(f"Caixa ID {caixa_id} está ABERTA.")
+
+    except sqlite3.DatabaseError as e:
+        print(f"Erro ao atualizar peça ID {peca_id}: {e}")
+        con.rollback()
+        raise
+
+
 def remover_peca(peca: dict) -> None:
     global cursor, con
 
@@ -215,7 +250,7 @@ def remover_peca(peca: dict) -> None:
         raise
 
 
-def recuperar_pecas_por_caixa_id(caixa_id: int) -> int:
+def recuperar_pecas_por_caixa_id(caixa_id: int) -> list[dict]:
     global cursor
 
     try:
@@ -238,7 +273,35 @@ def recuperar_pecas_por_caixa_id(caixa_id: int) -> int:
         ]
 
     except sqlite3.DatabaseError as e:
-        print(f"Erro ao contar peças da caixa {caixa_id}: {e}")
+        print(f"Erro ao recuperar peças da caixa {caixa_id}: {e}")
+        raise
+
+
+def recuperar_pecas_por_status(status: str) -> list[dict]:
+    global cursor
+
+    try:
+        
+        cursor.execute("""
+            SELECT * FROM peca WHERE status = ?
+        """, (status,))
+        rows = cursor.fetchall()
+
+        return [
+            {
+                "id": row["id"],
+                "caixa_id": row["caixa_id"],
+                "peso": row["peso"],
+                "cor": recuperar_cor_por_id(row["cor_id"])["nome"],
+                "comprimento": row["comprimento"],
+                "status": row["status"],
+                "motivos_reprovacao": json.loads(row["motivos_reprovacao"])
+            }
+            for row in rows
+        ]
+
+    except sqlite3.DatabaseError as e:
+        print(f"Erro ao recuperar peças com status {status}: {e}")
         raise
 
 
@@ -406,6 +469,27 @@ def recuperar_caixa_por_id(caixa_id: int) -> dict:
         }
     except sqlite3.DatabaseError as e:
         print(f"Erro ao buscar peça {caixa_id}: {e}")
+        raise
+
+
+def recuperar_caixas_por_status(esta_fechada: int) -> list[dict]:
+    global cursor
+
+    try:
+        cursor.execute("SELECT * FROM caixa WHERE esta_fechada = ?", (esta_fechada,))
+        rows = cursor.fetchall()
+
+        return [
+            {
+                "id": row["id"],
+                "esta_fechada": bool(row["esta_fechada"]),
+                "pecas": recuperar_pecas_por_caixa_id(row["id"])
+            }
+            for row in rows
+        ]
+    
+    except sqlite3.DatabaseError as e:
+        print(f"Erro ao recuperar caixas por status: {e}")
         raise
 
 
