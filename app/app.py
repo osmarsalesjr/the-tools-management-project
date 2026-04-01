@@ -8,23 +8,23 @@ from datetime import datetime, timezone
 from math import ceil
 
 
-from services.bd_service import (
-    conectar_servico_banco_de_dados,
-    desconectar_servico_banco_de_dados,
-    buscar_todas_as_pecas,
-    buscar_todas_as_caixas,
-    buscar_caixas_com_pecas,
-    buscar_caixas_com_pecas_por_status,
-    buscar_ou_criar_caixa_para_nova_peca,
-    buscar_peca_por_id,
-    excluir_peca,
-    buscar_cor_por_id,
-    buscar_cores,
-    guardar_peca,
-    buscar_pecas_por_status,
-    alterar_cadastro_peca,
-
+from operacoes.operacoes_banco_de_dados import (
+    conectar_banco_de_dados,
+    desconectar_banco_de_dados,
+    recuperar_todas_as_pecas,
+    recuperar_caixas,
+    recuperar_caixas_com_pecas,
+    recuperar_ou_criar_caixa_para_nova_peca,
+    recuperar_peca_por_id,
+    remover_peca,
+    recuperar_todas_as_cores,
+    recuperar_cor_por_id,
+    salvar_peca,
+    recuperar_caixas_por_status,
+    recuperar_pecas_por_status,
+    atualizar_peca,
 )
+
 
 from utilitarios.constantes import (
     LIMITE_ITENS_POR_PAGINA,
@@ -32,8 +32,7 @@ from utilitarios.constantes import (
     STATUS_REPROVADO
 )
 
-from utilitarios.pecas_utils import criar_peca
-from utilitarios.validacoes import validar_peca
+from utilitarios.pecas_utils import criar_peca, validar_peca
 
 app = Flask(__name__)
 
@@ -41,13 +40,13 @@ app = Flask(__name__)
 ### Abre uma nova conexão com banco de dados para cada requisição
 @app.before_request
 def inicializar_conexao_banco_de_dados():
-    conectar_servico_banco_de_dados()
+    conectar_banco_de_dados()
 
 
 ### Fecha conexão com banco de dados
 @app.teardown_appcontext
 def fechar_conexao_banco_de_dados(error=None):
-    desconectar_servico_banco_de_dados()
+    desconectar_banco_de_dados()
 
 
 ### Configura data atual para pagina base.html
@@ -66,7 +65,7 @@ def index():
 @app.route('/cadastrar-peca')
 def cadastrar_peca():
 
-    cores = buscar_cores()
+    cores = recuperar_todas_as_cores()
 
     return render_template(
         'cadastrar_peca.html',
@@ -81,7 +80,7 @@ def adicionar_peca():
 
     peso = dados.get('peso')
     comprimento = dados.get('comprimento')
-    cor = buscar_cor_por_id(dados.get('cor_id'))
+    cor = recuperar_cor_por_id(dados.get('cor_id'))
 
     if cor is None:
         return 'Cor selecionada não encontrada.', 404
@@ -90,17 +89,17 @@ def adicionar_peca():
     peca = validar_peca(peca, cor)
 
     if peca["status"].casefold() == STATUS_APROVADO.casefold():
-        caixa = buscar_ou_criar_caixa_para_nova_peca()
+        caixa = recuperar_ou_criar_caixa_para_nova_peca()
         peca["caixa_id"] = caixa.get("id")
 
-    peca = guardar_peca(peca)
+    peca = salvar_peca(peca)
     return '', 201, {'Location': f'/peca/{peca["id"]}'}
 
 
 @app.get('/pecas/<int:peca_id>')
 def detalhar_peca(peca_id: int):
 
-    peca = buscar_peca_por_id(peca_id)
+    peca = recuperar_peca_por_id(peca_id)
 
     if peca is None:
         return 'Peça não encontrada.', 404
@@ -114,12 +113,12 @@ def detalhar_peca(peca_id: int):
 @app.route('/alterar-peca/<int:peca_id>')
 def alterar_peca(peca_id: int):
 
-    peca = buscar_peca_por_id(peca_id)
+    peca = recuperar_peca_por_id(peca_id)
 
     if peca is None:
         return 'Peça não encontrada.', 404
 
-    cores = buscar_cores()
+    cores = recuperar_todas_as_cores()
 
     return render_template(
         'alterar_peca.html',
@@ -129,9 +128,9 @@ def alterar_peca(peca_id: int):
 
 
 @app.put('/pecas/<int:peca_id>')
-def atualizar_peca(peca_id: int):
+def atualizar_cadastro_peca(peca_id: int):
 
-    peca = buscar_peca_por_id(peca_id)
+    peca = recuperar_peca_por_id(peca_id)
 
     if peca is None:
         return 'Peça não encontrada.', 404
@@ -140,37 +139,27 @@ def atualizar_peca(peca_id: int):
 
     peca["peso"] = dados.get('peso')
     peca["comprimento"] = dados.get('comprimento')
-    cor = buscar_cor_por_id(dados.get('cor_id'))
+    cor = recuperar_cor_por_id(dados.get('cor_id'))
 
     if cor is None:
         return 'Cor selecionada não encontrada.', 404
 
     peca["cor_id"] = cor["id"]
     peca = validar_peca(peca, cor)
-
-    if peca["status"].casefold() == STATUS_REPROVADO.casefold():
-        peca["caixa_id"] = None
     
-    if (
-        peca["status"].casefold() == STATUS_APROVADO.casefold()
-        and peca["caixa_id"] is None
-    ):
-        caixa = buscar_ou_criar_caixa_para_nova_peca()
-        peca["caixa_id"] = caixa.get("id")
-
-    peca = alterar_cadastro_peca(peca)
+    atualizar_peca(peca)
     return '', 204
 
 
 @app.delete('/pecas/<int:peca_id>')
 def deletar_peca(peca_id: int):
 
-    peca = buscar_peca_por_id(peca_id)
+    peca = recuperar_peca_por_id(peca_id)
 
     if peca is None:
         return 'Peça não encontrada.', 404
     
-    excluir_peca(peca)
+    remover_peca(peca)
     return '', 204
 
 
@@ -178,7 +167,7 @@ def deletar_peca(peca_id: int):
 def listar_pecas_para_remocao():
     pagina = request.args.get('pagina', 1, type=int)
 
-    pecas = buscar_todas_as_pecas()
+    pecas = recuperar_todas_as_pecas()
     total_pecas = len(pecas)
 
     total_paginas = max(1, ceil(total_pecas / LIMITE_ITENS_POR_PAGINA))
@@ -202,7 +191,7 @@ def listar_pecas():
 
     pagina = request.args.get('pagina', 1, type=int)
 
-    pecas = buscar_todas_as_pecas()
+    pecas = recuperar_todas_as_pecas()
     total_pecas = len(pecas)
 
     total_paginas = max(1, ceil(total_pecas / LIMITE_ITENS_POR_PAGINA))
@@ -226,7 +215,7 @@ def listar_caixas_fechadas():
 
     pagina = request.args.get('pagina', 1, type=int)
 
-    caixas = buscar_caixas_com_pecas_por_status(int(True))
+    caixas = recuperar_caixas_por_status(int(True))
     total_caixas = len(caixas)
 
     total_paginas = max(1, ceil(total_caixas / LIMITE_ITENS_POR_PAGINA))
@@ -249,7 +238,7 @@ def listar_todas_caixas():
 
     pagina = request.args.get('pagina', 1, type=int)
 
-    caixas = buscar_caixas_com_pecas()
+    caixas = recuperar_caixas_com_pecas()
     total_caixas = len(caixas)
 
     total_paginas = max(1, ceil(total_caixas / LIMITE_ITENS_POR_PAGINA))
@@ -270,10 +259,10 @@ def listar_todas_caixas():
 @app.route('/gerar-relatorio')
 def gerar_relatorio():
 
-    pecas_aprovadas = buscar_pecas_por_status(STATUS_APROVADO)
-    pecas_reprovadas = buscar_pecas_por_status(STATUS_REPROVADO)
+    pecas_aprovadas = recuperar_pecas_por_status(STATUS_APROVADO)
+    pecas_reprovadas = recuperar_pecas_por_status(STATUS_REPROVADO)
 
-    caixas = buscar_todas_as_caixas()
+    caixas = recuperar_caixas()
     quantidade_caixas_fechadas = 0
     quantidade_caixas_abertas = 0
 

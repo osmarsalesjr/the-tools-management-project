@@ -4,8 +4,8 @@ import json
 
 from flask import g
 
-from dao.massa_dados_testes import pegar_massa_lista_pecas
-from utilitarios.constantes import STATUS_APROVADO
+from operacoes.massa_dados_testes import pegar_massa_lista_pecas
+from utilitarios.constantes import STATUS_APROVADO, STATUS_REPROVADO
 
 SCRIPT = """
 CREATE TABLE IF NOT EXISTS caixa (
@@ -143,10 +143,16 @@ def verificar_status_caixa(caixa_id: int) -> None:
 
     try:
         quantidade_pecas = contar_pecas_por_caixa(caixa_id)
+        caixa = recuperar_caixa_por_id(caixa_id)
+        status_caixa = caixa["esta_fechada"]
 
-        if quantidade_pecas >= 10:
+        if quantidade_pecas >= 10 and status_caixa is False:
             atualizar_caixa(caixa_id, int(True))
-            print(f"Caixa {caixa_id} atualizada para fechada.")
+            print(f"Caixa {caixa_id} atualizada para FECHADA.")
+
+        if quantidade_pecas < 10 and status_caixa is True:
+                atualizar_caixa(caixa_id, int(False))
+                print(f"Caixa ID {caixa_id} atualizada para ABERTA.")
 
     except Exception as e:
         print(f"Erro ao verificar status da caixa ID {caixa_id}: {e}")
@@ -195,7 +201,19 @@ def atualizar_peca(peca: dict) -> None:
     motivos_reprovacao = json.dumps(peca["motivos_reprovacao"])
     caixa_id = peca.get("caixa_id")
 
+    caixa_id_temp = caixa_id
+
     try:
+        
+        if(status.casefold() == STATUS_APROVADO.casefold()):
+            if caixa_id is None:
+                caixa = recuperar_ou_criar_caixa_para_nova_peca()
+                caixa_id = caixa.get("id")
+                caixa_id_temp = caixa_id
+
+        if status.casefold() == STATUS_REPROVADO.casefold():
+            caixa_id_temp = caixa_id
+            caixa_id = None
         
         cursor.execute("""
             UPDATE peca SET caixa_id = ?, peso = ?, cor_id = ?, comprimento = ?, status = ?, motivos_reprovacao = ?
@@ -203,17 +221,9 @@ def atualizar_peca(peca: dict) -> None:
         """, (caixa_id, peso, cor_id, comprimento, status, motivos_reprovacao, peca_id,))
 
         con.commit()
-
-        if caixa_id is not None:
-            quantidade_pecas = contar_pecas_por_caixa(caixa_id)
-
-            if quantidade_pecas >= 10:
-                atualizar_caixa(caixa_id, int(True))
-                print(f"Caixa ID {caixa_id} está FECHADA.")
-
-            if quantidade_pecas < 10:
-                atualizar_caixa(caixa_id, int(False))
-                print(f"Caixa ID {caixa_id} está ABERTA.")
+        
+        if caixa_id_temp is not None:
+            verificar_status_caixa(caixa_id_temp)
 
     except sqlite3.DatabaseError as e:
         print(f"Erro ao atualizar peça ID {peca_id}: {e}")
@@ -237,11 +247,7 @@ def remover_peca(peca: dict) -> None:
         if caixa_id is None:
             return
         
-        caixa = recuperar_caixa_por_id(caixa_id)
-
-        if (caixa is not None and caixa["esta_fechada"]):
-            atualizar_caixa(caixa_id, int(False))
-            print(f"Caixa ID {caixa_id} foi atualizada para ABERTA.")
+        verificar_status_caixa(caixa_id)
             
 
     except sqlite3.DatabaseError as e:
@@ -354,6 +360,8 @@ def criar_caixa() -> dict:
 
         con.commit()
 
+        print(f"Uma nova caixa foi aberta com ID {cursor.lastrowid}.")
+
         return {
             "id": cursor.lastrowid,
             "esta_fechada": False
@@ -465,7 +473,7 @@ def recuperar_caixa_por_id(caixa_id: int) -> dict:
 
         return {
             "id": row["id"],
-            "esta_fechada": row["esta_fechada"]
+            "esta_fechada": bool(row["esta_fechada"])
         }
     except sqlite3.DatabaseError as e:
         print(f"Erro ao buscar peça {caixa_id}: {e}")
