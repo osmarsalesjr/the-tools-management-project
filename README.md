@@ -139,7 +139,10 @@ http://localhost:5000
 
 ```json
 {
-  "id": 1,
+  "id": 66,
+  "peso": 100,
+  "cor_id": 4,
+  "comprimento": 15,
   "status": "APROVADO",
   "caixa_id": 2,
   "motivos_reprovacao": []
@@ -152,11 +155,15 @@ http://localhost:5000
 
 ```json
 {
-  "id": 2,
+  "id": 64,
+  "peso": 102,
+  "cor_id": 12,
+  "comprimento": 34,
   "status": "REPROVADO",
   "caixa_id": null,
   "motivos_reprovacao": [
-    "PESO DA PEÇA NÃO SEGUE OS PADRÕES DE QUALIDADE."
+    "COR DA PEÇA NÃO SEGUE OS PADRÕES DE QUALIDADE.",
+    "COMPRIMENTO DA PEÇA NÃO SEGUE OS PADRÕES DE QUALIDADE."
   ]
 }
 ```

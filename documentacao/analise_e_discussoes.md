@@ -26,7 +26,11 @@ Diante disso, o Ozzy surge como uma solução automatizada capaz de:
 
 ## 2. Importância da Automação na Indústria
 
-> ⚠️ *Seção reservada para edição futura.*
+A automação na indústria é algo em constante evolução seja qual for a área aplicada. Se um processo possui etapas manuais e/ou repetitivas para a execução de uma tarefa, isso estabele um padrão de comportamento, que por sua vez é passível de automação. A automatização de processos aplicados não aos vários setores da indústria, podem trazer vantagens como agilidade e aumento de lucros para uma empresa. Além disso, tende a reduzir os riscos de erros humanos e a carga de trabalho de colaboradores.
+
+Automatizar tarefas também apresenta algumas desvantagens como aumento nos custos de criação e manutenção de recursos que mantém tal automatização em execução, encontrar colaborares capacitados com conhecimentos específicos para ajudar com situações como problemas técnicos relacionados a automação, entre outros. Apesar de tais consequências, as vantagens tendem a superar as desvantagens quando se há sistemas automizados acelerando a produtitividade de uma empresa, tornando operações mais econômicas, à prova de erros e visíveis, eliminando a necessidade de fluxos de trabalho redundantes e ineficientes. 
+
+Dentro desse contexto, trazemos a solução Ozzy - Gerencimento de Peças, que oferece cadastro, processamento e avaliação de peças de uma linha de montagem. O processo de avaliação e aprovação de peças, antes manual, agora pode ser feito de forma automática através do sistema, o qual recebe informações de uma peça e com base em critérios definidos pelo cliente, uma peça pode ser aprovada e automaticamente encaixada. Além de oferecer um espaço completo para administrar peças cadastradas, as caixas que foram fechadas e abertas, peças que não foram aprovadas e leitura de relatórios.
 
 ---
 
@@ -215,11 +219,9 @@ O Ozzy demonstra como uma solução relativamente simples em Python pode resolve
 
 ## 9. Referências
 
-* Documentação oficial do Python — https://docs.python.org/3/
-* Documentação oficial do Flask — https://flask.palletsprojects.com/
-* Documentação SQLite — https://www.sqlite.org/docs.html
-* Conceitos de Banco de Dados Relacional — Elmasri & Navathe
-* Princípios de Engenharia de Software — Sommerville
-* Materiais acadêmicos sobre automação industrial e controle de qualidade
+* [Documentação oficial do Python](https://docs.python.org/3/)
+* [Documentação oficial do Flask](https://flask.palletsprojects.com/)
+* [Documentação SQLite](https://www.sqlite.org/docs.html)
+* [Conheça as vantagens e desvantagens da automação industrial](https://sebrae.com.br/sites/PortalSebrae/artigos/conheca-as-vantagens-e-desvantagens-da-automacao-industrial,4e6896bdbe056810VgnVCM1000001b00320aRCRD)
 
 ---
