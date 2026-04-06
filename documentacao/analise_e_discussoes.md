@@ -118,8 +118,18 @@ Abaixo está uma representação conceitual baseada no script SQL:
 
 A imagem abaixo representa o relacionamento entre as entidades do sistema:
 
->![Diagrama do banco](./db_schema.png)
+>![Diagrama do banco](https://1drv.ms/i/c/c417189aeed0f9d1/IQRJFYAAdS4FSYcKzUvWwj8gARV7MQ3THueWGAXuG5UPoIo?width=922&height=478)
 
+---
+### 3.3 Interface de Sistema
+
+A interface do sistema foi construída com o framework Flask, que possui alta compatibilidade com a estrutura e arquitetura do sistema, visto possui uma grande variedade de recursos para aplicações baseadas em API. O Flask é um framework baseado em WSGI (Web Server Gateway Interface). O Flask é uma ferramenta poderoso, leve e intuitivo para construção de uma aplicação web.
+
+Nessa aplicação, também foram utilizados templates HTMLs com o framework de CSS Bootstrap para estabelecer a as páginas de interação com do usuário com o sistema e a identidade do Ozzy - Gerenciamento de Peças. Considerando o contexto de linha de montagem, cadastro e avaliação de peças, o sistema estabele uma identidade visual mecanizada funcional, predominante de cores escuras, destacando as funcionalidades principais da aplicação.
+
+A imagem abaixo representa a páginal inicial do sistema:
+
+>![Ozzy - Gerenciamento de Peças](https://1drv.ms/i/c/c417189aeed0f9d1/IQQzlDdiu0eKQZ89Wtgll_raARZ6j4RNQDqDsU4uzObv3fE?width=1919&height=908)
 ---
 
 ## 4. Regras de Negócio Implementadas
@@ -145,6 +155,12 @@ O sistema possui regras dinâmicas importantes:
 * Capacidade máxima: 10 peças
 * Caixa fecha automaticamente ao atingir limite
 * Caixa reabre automaticamente se perder peças
+
+### ✔ Relatórios
+
+* Relatório de peças aprovadas
+* Relatório de peças reprovadas e motivos da reprovação
+* Relatório de caixas utilizadas: fechadas e abertas
 
 ---
 
@@ -217,7 +233,13 @@ O Ozzy demonstra como uma solução relativamente simples em Python pode resolve
 
 ---
 
-## 9. Referências
+## 9. Artefatos
+
+* [Repositório GitHub](https://github.com/osmarsalesjr/the-tools-management-project)
+
+---
+
+## 10. Referências
 
 * [Documentação oficial do Python](https://docs.python.org/3/)
 * [Documentação oficial do Flask](https://flask.palletsprojects.com/)
