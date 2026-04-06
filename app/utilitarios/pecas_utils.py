@@ -1,10 +1,10 @@
-STATUS_APROVADO = "APROVADO"
-STATUS_REPROVADO = "REPROVADO"
 
-MOTIVO_REPROVADO_POR_PESO = "PESO DA PEÇA NÃO SEGUE OS PADRÕES DE QUALIDADE."
-MOTIVO_REPROVADO_POR_COR = "COR DA PEÇA NÃO SEGUE OS PADRÕES DE QUALIDADE."
-MOTIVO_REPROVADO_POR_COMPRIMENTO = (
-    "COMPRIMENTO DA PEÇA NÃO SEGUE OS PADRÕES DE QUALIDADE."
+from utilitarios.constantes import (
+    STATUS_APROVADO,
+    STATUS_REPROVADO,
+    MOTIVO_REPROVADO_POR_COMPRIMENTO,
+    MOTIVO_REPROVADO_POR_COR,
+    MOTIVO_REPROVADO_POR_PESO
 )
 
 
@@ -12,13 +12,26 @@ def main() -> None:
     pass
 
 
-def processar_validacao_peca(peca: dict) -> dict:
+def criar_peca(peso: int, cor_id: int, comprimento: int) -> dict:
+    peca = {
+        "peso": peso,
+        "cor_id": cor_id,
+        "comprimento": comprimento,
+        "status": "",
+        "motivos_reprovacao": [],
+        "caixa_id": None
+    }
+
+    return peca
+
+
+def validar_peca(peca: dict, cor: dict) -> dict:
 
     if peca is None:
         return peca
 
     peso = peca["peso"]
-    cor = str(peca["cor"])
+    cor = cor["nome"]
     comprimento = peca["comprimento"]
     motivos_reprovacao = []
 
@@ -35,7 +48,8 @@ def processar_validacao_peca(peca: dict) -> dict:
         peca["status"] = STATUS_APROVADO
     else:
         peca["status"] = STATUS_REPROVADO
-        peca["motivos_reprovacao"] = motivos_reprovacao
+    
+    peca["motivos_reprovacao"] = motivos_reprovacao
 
     return peca
 

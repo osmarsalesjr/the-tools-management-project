@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+
+{% block title %}Listagem de Caixas — Ozzy{% endblock %}
+{% block breadcrumb %}CAIXAS / LISTAGEM{% endblock %}
+
+{% block content %}
+
+{% set mapa_cores = {
+  'vermelho':   '#e74c3c',
+  'azul':       '#3498db',
+  'verde':      '#2ecc71',
+  'amarelo':    '#f1c40f',
+  'laranja':    '#e67e22',
+  'roxo':       '#9b59b6',
+  'rosa':       '#e91e8c',
+  'branco':     '#ecf0f1',
+  'preto':      '#2c3e50',
+  'cinza':      '#95a5a6',
+  'marrom':     '#a0522d',
+  'bege':       '#f5f0dc',
+  'dourado':    '#f5a623',
+  'prata':      '#bdc3c7',
+} %}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div class="ozzy-page-title mb-0" style="flex:1;">
+    <i class="bi bi-boxes" style="color: var(--ozzy-accent);"></i>
+    Listagem de Caixas
+  </div>
+  <a href="{{ url_for('index') }}" class="btn-ozzy-outline btn">
+    <i class="bi bi-arrow-left me-1"></i> Voltar
+  </a>
+</div>
+
+<!-- Totalizadores -->
+<div class="row g-2 mb-4">
+  <div class="col-6 col-md-4">
+    <div class="ozzy-stat-card">
+      <div class="ozzy-stat-value">{{ caixas | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-box me-1"></i>Total de Caixas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="ozzy-stat-card ozzy-stat-card--closed">
+      <div class="ozzy-stat-value">{{ caixas | selectattr('esta_fechada', 'equalto', True) | list | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-lock me-1"></i>Fechadas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="ozzy-stat-card ozzy-stat-card--open">
+      <div class="ozzy-stat-value">{{ caixas | selectattr('esta_fechada', 'equalto', False) | list | length }}</div>
+      <div class="ozzy-stat-label"><i class="bi bi-lock-open me-1"></i>Abertas</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabela de caixas -->
+<div class="card">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-table me-2"></i>Caixas Cadastradas</span>
+    <span class="ozzy-pag-info">
+      Pág. <strong>{{ pagina_atual }}</strong> de <strong>{{ total_paginas }}</strong>
+      &nbsp;·&nbsp; {{ caixas_pagina | length }} de {{ caixas | length }} registros
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Status</th>
+          <th>Peças</th>
+          <th class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if caixas_pagina %}
+          {% for caixa in caixas_pagina %}
+
+          <!-- Linha principal da caixa -->
+          <tr class="ozzy-tr-caixa ozzy-tr-{{ 'closed' if caixa.esta_fechada else 'open' }}">
+
+            <td class="ozzy-mono">{{ caixa.id }}</td>
+
+            <td>
+              {% if caixa.esta_fechada %}
+                <span class="ozzy-badge ozzy-badge--closed">
+                  <i class="bi bi-lock-fill me-1"></i>CAIXA FECHADA
+                </span>
+              {% else %}
+                <span class="ozzy-badge ozzy-badge--open">
+                  <i class="bi bi-lock-open me-1"></i>CAIXA ABERTA
+                </span>
+              {% endif %}
+            </td>
+
+            <td class="ozzy-peca-count">
+              <span class="ozzy-count-badge">
+                <i class="bi bi-gear me-1"></i>{{ caixa.pecas | length }} / 10
+              </span>
+            </td>
+
+            <td class="text-center">
+              <button
+                class="btn-ozzy-outline btn btn-sm ozzy-toggle-btn"
+                data-target="pecas-caixa-{{ caixa.id }}"
+              >
+                <i class="bi bi-chevron-down me-1"></i>
+                <span>Exibir Peças</span>
+              </button>
+            </td>
+          </tr>
+
+          <!-- Linha expansível com peças da caixa -->
+          <tr class="ozzy-pecas-row" id="pecas-caixa-{{ caixa.id }}">
+            <td colspan="4" class="p-0">
+              <div class="ozzy-pecas-panel">
+
+                {% if caixa.pecas %}
+                  <table class="table table-sm align-middle mb-0 ozzy-inner-table">
+                    <thead>
+                      <tr>
+                        <th>ID Peça</th>
+                        <th>Peso (g)</th>
+                        <th>Cor</th>
+                        <th>Comprimento (cm)</th>
+                        <th>Status</th>
+                        <th class="text-center"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for peca in caixa.pecas %}
+                      <tr>
+                        <td class="ozzy-mono">{{ peca.id }}</td>
+                        <td>{{ peca.peso }}</td>
+                        <td>
+                          {% set cor_hex = mapa_cores.get(peca.cor | lower, '#5a6075') %}
+                          <span class="ozzy-cor-badge" style="color: {{ cor_hex }}; border-color: {{ cor_hex }};">
+                            {{ peca.cor }}
+                          </span>
+                        </td>
+                        <td>{{ peca.comprimento }}</td>
+                        <td>
+                          <span class="ozzy-badge ozzy-badge--approved">
+                            <i class="bi bi-check-circle-fill me-1"></i>APROVADO
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <a
+                            href="{{ url_for('detalhar_peca', peca_id=peca.id) }}"
+                            class="ozzy-btn-info"
+                            title="Detalhes"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="left"
+                          >
+                            <i class="bi bi-info-circle-fill"></i>
+                          </a>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                {% else %}
+                  <div class="ozzy-empty-panel">
+                    <i class="bi bi-inbox"></i>
+                    Nenhuma peça associada a esta caixa.
+                  </div>
+                {% endif %}
+
+              </div>
+            </td>
+          </tr>
+
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="4" class="text-center py-5 ozzy-empty-state">
+              <i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:.5rem;"></i>
+              Nenhuma caixa cadastrada.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginação -->
+  {% if total_paginas > 1 %}
+  <div class="card-footer d-flex justify-content-center py-3">
+    <nav>
+      <ul class="pagination ozzy-pagination mb-0">
+
+        <!-- Anterior -->
+        <li class="page-item {% if pagina_atual == 1 %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('listar_todas_caixas', pagina=pagina_atual - 1) }}">
+            <i class="bi bi-chevron-left"></i>
+          </a>
+        </li>
+
+        <!-- Páginas -->
+        {% for p in range(1, total_paginas + 1) %}
+          <li class="page-item {% if p == pagina_atual %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('listar_todas_caixas', pagina=p) }}">{{ p }}</a>
+          </li>
+        {% endfor %}
+
+        <!-- Próxima -->
+        <li class="page-item {% if pagina_atual == total_paginas %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('listar_todas_caixas', pagina=pagina_atual + 1) }}">
+            <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+
+</div><!-- /card -->
+
+{% endblock %}
+
+
+{% block extra_head %}
+<style>
+  /* ── STAT CARDS ─────────────────────────────────── */
+  .ozzy-stat-card {
+    background: var(--ozzy-surface);
+    border: 1px solid var(--ozzy-border);
+    border-left: 3px solid var(--ozzy-accent);
+    border-radius: 6px;
+    padding: .85rem 1.1rem;
+    text-align: center;
+  }
+  .ozzy-stat-card--closed { border-left-color: #e74c3c; }
+  .ozzy-stat-card--open   { border-left-color: #2ecc71; }
+
+  .ozzy-stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.9rem;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .ozzy-stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ozzy-muted);
+    margin-top: 4px;
+  }
+
+  /* ── TABELA PRINCIPAL ───────────────────────────── */
+  .ozzy-mono {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .8rem;
+    color: var(--ozzy-accent);
+  }
+
+  .ozzy-pag-info {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .06em;
+  }
+
+  .ozzy-empty-state {
+    color: var(--ozzy-muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .8rem;
+    letter-spacing: .06em;
+  }
+
+  .ozzy-tr-closed:hover td { background: rgba(231,76,60,.04) !important; }
+  .ozzy-tr-open:hover   td { background: rgba(46,204,113,.04) !important; }
+
+  /* ── CONTAGEM DE PEÇAS ──────────────────────────── */
+  .ozzy-count-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .72rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .05em;
+  }
+
+  /* ── BADGES ─────────────────────────────────────── */
+  .ozzy-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .07em;
+    padding: .25rem .6rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .ozzy-badge--closed {
+    background: rgba(231,76,60,.12);
+    border: 1px solid rgba(231,76,60,.3);
+    color: #e74c3c;
+  }
+
+  .ozzy-badge--open {
+    background: rgba(46,204,113,.12);
+    border: 1px solid rgba(46,204,113,.3);
+    color: #2ecc71;
+  }
+
+  .ozzy-badge--approved {
+    background: rgba(46,204,113,.12);
+    border: 1px solid rgba(46,204,113,.3);
+    color: #2ecc71;
+  }
+
+  /* ── COR BADGE ──────────────────────────────────── */
+  .ozzy-cor-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .72rem;
+    padding: .18rem .5rem;
+    border-radius: 3px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--ozzy-border);
+    /*color: var(--ozzy-text);*/
+  }
+
+  /* ── BOTÃO TOGGLE ───────────────────────────────── */
+  .ozzy-toggle-btn {
+    font-size: .75rem;
+    padding: .3rem .8rem;
+    transition: background .2s, color .2s, border-color .2s;
+  }
+
+  .ozzy-toggle-btn.is-open {
+    background: var(--ozzy-accent);
+    color: #0d0f14;
+    border-color: var(--ozzy-accent);
+  }
+
+  .ozzy-toggle-btn .bi-chevron-down,
+  .ozzy-toggle-btn .bi-chevron-up {
+    transition: transform .25s;
+  }
+
+  /* ── LINHA EXPANSÍVEL ───────────────────────────── */
+  .ozzy-pecas-row {
+    display: none;
+  }
+
+  .ozzy-pecas-row.is-open {
+    display: table-row;
+  }
+
+  /* ── PAINEL INTERNO ─────────────────────────────── */
+  .ozzy-pecas-panel {
+    background: rgba(245,166,35,.03);
+    border-top: 1px solid var(--ozzy-accent);
+    border-bottom: 1px solid var(--ozzy-border);
+    animation: slideDown .2s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── TABELA INTERNA ─────────────────────────────── */
+  .ozzy-inner-table {
+    background: transparent;
+  }
+
+  .ozzy-inner-table thead th {
+    background: rgba(245,166,35,.06) !important;
+    color: var(--ozzy-accent) !important;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    border-color: var(--ozzy-border) !important;
+    padding: .5rem 1rem;
+  }
+
+  .ozzy-inner-table td {
+    padding: .45rem 1rem;
+    font-size: .82rem;
+    border-color: var(--ozzy-border) !important;
+  }
+
+  .ozzy-inner-table tbody tr:hover td {
+    background: rgba(46,204,113,.04) !important;
+  }
+
+  /* ── BOTÃO INFO ─────────────────────────────────── */
+  .ozzy-btn-info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    color: var(--ozzy-muted);
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: color .2s, background .2s;
+  }
+
+  .ozzy-btn-info:hover {
+    color: var(--ozzy-accent);
+    background: rgba(245,166,35,.1);
+  }
+
+  /* ── PAINEL VAZIO ───────────────────────────────── */
+  .ozzy-empty-panel {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: 1.2rem 1.5rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .75rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .05em;
+  }
+
+  .ozzy-empty-panel .bi-inbox {
+    font-size: 1.1rem;
+  }
+
+  /* ── PAGINAÇÃO ──────────────────────────────────── */
+  .card-footer {
+    background: var(--ozzy-surface) !important;
+    border-top: 1px solid var(--ozzy-border) !important;
+  }
+
+  .ozzy-pagination .page-link {
+    background: var(--ozzy-bg);
+    border-color: var(--ozzy-border);
+    color: var(--ozzy-muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .78rem;
+    transition: background .15s, color .15s;
+  }
+
+  .ozzy-pagination .page-link:hover {
+    background: rgba(245,166,35,.1);
+    color: var(--ozzy-accent);
+    border-color: var(--ozzy-accent);
+  }
+
+  .ozzy-pagination .page-item.active .page-link {
+    background: var(--ozzy-accent);
+    border-color: var(--ozzy-accent);
+    color: #0d0f14;
+    font-weight: 700;
+  }
+
+  .ozzy-pagination .page-item.disabled .page-link {
+    background: var(--ozzy-surface);
+    color: var(--ozzy-border);
+    border-color: var(--ozzy-border);
+  }
+</style>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('.ozzy-toggle-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const targetId = btn.getAttribute('data-target');
+      const row      = document.getElementById(targetId);
+      const label    = btn.querySelector('span');
+      const icon     = btn.querySelector('i');
+
+      const isOpen = row.classList.toggle('is-open');
+      btn.classList.toggle('is-open', isOpen);
+
+      if (isOpen) {
+        label.textContent = 'Ocultar Peças';
+        icon.className    = 'bi bi-chevron-up me-1';
+      } else {
+        label.textContent = 'Exibir Peças';
+        icon.className    = 'bi bi-chevron-down me-1';
+      }
+    });
+  });
+
+  // Inicializa tooltips
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+    new bootstrap.Tooltip(el);
+  });
+</script>
+{% endblock %}

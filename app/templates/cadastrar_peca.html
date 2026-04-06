@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastrar Peça — Ozzy{% endblock %}
+{% block breadcrumb %}PEÇAS / CADASTRAR{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+  <div class="ozzy-page-title mb-0" style="flex:1;">
+    <i class="bi bi-plus-square-dotted" style="color: var(--ozzy-accent);"></i>
+    Cadastrar Nova Peça
+  </div>
+  <a href="{{ url_for('index') }}" class="btn-ozzy-outline btn">
+    <i class="bi bi-arrow-left me-1"></i> Voltar
+  </a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+
+    <div class="card ozzy-form-card">
+      <div class="card-header">
+        <i class="bi bi-gear me-2"></i>Dados da Peça
+      </div>
+
+      <div class="card-body p-4">
+        <form id="form-cadastrar-peca" novalidate>
+
+          <!-- Peso -->
+          <div class="mb-4">
+            <label for="peso" class="form-label">Peso</label>
+            <div class="input-group ozzy-input-group">
+              <span class="input-group-text ozzy-input-addon">
+                <i class="bi bi-speedometer2"></i>
+              </span>
+              <input
+                type="number"
+                class="form-control"
+                id="peso"
+                name="peso"
+                placeholder="Digite o peso da peça em gramas (g)"
+                min="1"
+                step="1"
+                required
+              />
+            </div>
+            <div class="ozzy-field-feedback" id="feedback-peso"></div>
+          </div>
+
+          <!-- Comprimento -->
+          <div class="mb-4">
+            <label for="comprimento" class="form-label">Comprimento</label>
+            <div class="input-group ozzy-input-group">
+              <span class="input-group-text ozzy-input-addon">
+                <i class="bi bi-rulers"></i>
+              </span>
+              <input
+                type="number"
+                class="form-control"
+                id="comprimento"
+                name="comprimento"
+                placeholder="Digite o comprimento da peça em centímetros (cm)"
+                min="1"
+                step="1"
+                required
+              />
+            </div>
+            <div class="ozzy-field-feedback" id="feedback-comprimento"></div>
+          </div>
+
+          <!-- Cor -->
+          <div class="mb-5">
+            <label for="cor_id" class="form-label">Cor</label>
+            <div class="input-group ozzy-input-group">
+              <span class="input-group-text ozzy-input-addon">
+                <i class="bi bi-palette"></i>
+              </span>
+              <select class="form-select" id="cor_id" name="cor_id" required>
+                <option value="" disabled selected>Selecione uma cor...</option>
+                {% for cor in cores %}
+                  <option value="{{ cor.id }}">{{ cor.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="ozzy-field-feedback" id="feedback-cor"></div>
+          </div>
+
+          <!-- Botão -->
+          <div class="d-grid">
+            <button type="submit" class="btn-ozzy btn ozzy-btn-submit" id="btn-cadastrar">
+              <i class="bi bi-plus-circle me-2"></i>Cadastrar Peça
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══ MODAL DE SUCESSO ═════════════════════════════════ -->
+<div class="modal fade" id="modalSucesso" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content ozzy-modal">
+
+      <div class="modal-body ozzy-modal-body text-center py-4">
+        <i class="bi bi-check-circle-fill ozzy-sucesso-icon"></i>
+        <div class="ozzy-modal-title mt-3">Peça Cadastrada!</div>
+        <p class="ozzy-modal-desc mt-2">A peça foi registrada com sucesso no sistema.</p>
+      </div>
+
+      <div class="modal-footer ozzy-modal-footer justify-content-center">
+        <button type="button" class="btn-ozzy-outline btn" onclick="fecharSucesso()">
+          <i class="bi bi-check me-1"></i>OK
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ MODAL DE ERRO ═══════════════════════════════════ -->
+<div class="modal fade" id="modalErro" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content ozzy-modal">
+
+      <div class="modal-body ozzy-modal-body text-center py-4">
+        <i class="bi bi-x-circle-fill ozzy-erro-icon"></i>
+        <div class="ozzy-modal-title mt-3">Erro ao Cadastrar</div>
+        <p class="ozzy-modal-desc mt-2" id="modal-erro-msg">Ocorreu um erro ao cadastrar a peça.</p>
+      </div>
+
+      <div class="modal-footer ozzy-modal-footer justify-content-center">
+        <button type="button" class="btn-ozzy-outline btn" data-bs-dismiss="modal">
+          <i class="bi bi-arrow-left me-1"></i>Voltar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_head %}
+<style>
+  /* ── CARD DO FORMULÁRIO ─────────────────────────── */
+  .ozzy-form-card {
+    border-left: 3px solid var(--ozzy-accent) !important;
+    margin-top: .5rem;
+  }
+
+  /* ── INPUT GROUP ────────────────────────────────── */
+  .ozzy-input-group .ozzy-input-addon {
+    background: rgba(245,166,35,.08);
+    border: 1px solid var(--ozzy-border);
+    border-right: none;
+    color: var(--ozzy-accent);
+    font-size: 1rem;
+  }
+
+  .ozzy-input-group .form-control,
+  .ozzy-input-group .form-select {
+    border-left: none !important;
+  }
+
+  .ozzy-input-group .form-control:focus,
+  .ozzy-input-group .form-select:focus {
+    border-color: var(--ozzy-accent) !important;
+    box-shadow: 0 0 0 3px rgba(245,166,35,.15) !important;
+  }
+
+  .ozzy-input-group .form-control:focus ~ .ozzy-input-addon,
+  .ozzy-input-group:focus-within .ozzy-input-addon {
+    border-color: var(--ozzy-accent);
+    color: var(--ozzy-accent);
+  }
+
+  /* Remove setas do input number */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+  input[type=number] { -moz-appearance: textfield; }
+
+  /* ── FEEDBACK DE VALIDAÇÃO ──────────────────────── */
+  .ozzy-field-feedback {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .7rem;
+    letter-spacing: .04em;
+    margin-top: .4rem;
+    min-height: 1rem;
+    color: #e74c3c;
+  }
+
+  .ozzy-field-feedback.success {
+    color: #2ecc71;
+  }
+
+  /* Campo inválido */
+  .field-error .form-control,
+  .field-error .form-select {
+    border-color: #e74c3c !important;
+  }
+
+  .field-error .ozzy-input-addon {
+    border-color: #e74c3c !important;
+    color: #e74c3c !important;
+  }
+
+  /* ── BOTÃO SUBMIT ───────────────────────────────── */
+  .ozzy-btn-submit {
+    font-size: 1rem;
+    padding: .6rem 1.4rem;
+    letter-spacing: .08em;
+  }
+
+  .ozzy-btn-submit:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+  }
+
+  /* ── MODAIS ─────────────────────────────────────── */
+  .ozzy-modal {
+    background: var(--ozzy-surface);
+    border: 1px solid var(--ozzy-border);
+    border-radius: 8px;
+  }
+
+  .ozzy-modal-body {
+    color: var(--ozzy-text);
+    font-size: .88rem;
+    padding: 1.4rem 1.25rem;
+  }
+
+  .ozzy-modal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #fff;
+  }
+
+  .ozzy-modal-desc {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .72rem;
+    color: var(--ozzy-muted);
+    letter-spacing: .04em;
+    margin-bottom: 0;
+  }
+
+  .ozzy-modal-footer {
+    border-top: 1px solid var(--ozzy-border);
+    padding: .85rem 1.25rem;
+  }
+
+  .ozzy-sucesso-icon {
+    font-size: 2.8rem;
+    color: #2ecc71;
+    filter: drop-shadow(0 0 10px rgba(46,204,113,.4));
+  }
+
+  .ozzy-erro-icon {
+    font-size: 2.8rem;
+    color: #e74c3c;
+    filter: drop-shadow(0 0 10px rgba(231,76,60,.4));
+  }
+</style>
+{% endblock %}
+
+
+{% block extra_scripts %}
+<script>
+  const modalSucesso = new bootstrap.Modal(document.getElementById('modalSucesso'));
+  const modalErro    = new bootstrap.Modal(document.getElementById('modalErro'));
+
+  // ── VALIDAÇÃO DOS CAMPOS ───────────────────────────
+  function validarCampo(id, feedbackId, mensagem) {
+    const campo    = document.getElementById(id);
+    const feedback = document.getElementById(feedbackId);
+    const grupo    = campo.closest('.mb-4, .mb-5');
+
+    const valor = campo.value.trim();
+    const vazio = valor === '' || valor === null;
+    const invalido = campo.type === 'number' && (!vazio && (isNaN(Number(valor)) || Number(valor) < 1));
+
+    if (vazio || invalido) {
+      grupo.classList.add('field-error');
+      feedback.textContent = mensagem;
+      return false;
+    }
+
+    grupo.classList.remove('field-error');
+    feedback.textContent = '';
+    return true;
+  }
+
+  function validarFormulario() {
+    const pesoOk        = validarCampo('peso',        'feedback-peso',        'Campo obrigatório. Informe um valor maior que zero.');
+    const comprimentoOk = validarCampo('comprimento', 'feedback-comprimento', 'Campo obrigatório. Informe um valor maior que zero.');
+    const corOk         = validarCampo('cor_id',      'feedback-cor',         'Selecione uma cor para a peça.');
+    return pesoOk && comprimentoOk && corOk;
+  }
+
+  // Limpa erro ao digitar/selecionar
+  ['peso', 'comprimento', 'cor_id'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', function() {
+      const grupo = this.closest('.mb-4, .mb-5');
+      grupo.classList.remove('field-error');
+      document.getElementById('feedback-' + (id === 'cor_id' ? 'cor' : id)).textContent = '';
+    });
+  });
+
+  // ── SUBMIT ────────────────────────────────────────
+  document.getElementById('form-cadastrar-peca').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    if (!validarFormulario()) return;
+
+    const btn = document.getElementById('btn-cadastrar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cadastrando...';
+
+    const payload = {
+      peso:        parseInt(document.getElementById('peso').value),
+      comprimento: parseInt(document.getElementById('comprimento').value),
+      cor_id:      parseInt(document.getElementById('cor_id').value),
+    };
+
+    try {
+      const response = await fetch('/pecas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.status === 201) {
+        document.getElementById('form-cadastrar-peca').reset();
+        modalSucesso.show();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        document.getElementById('modal-erro-msg').textContent =
+          data.mensagem || 'Ocorreu um erro ao cadastrar a peça. Tente novamente.';
+        modalErro.show();
+      }
+
+    } catch (err) {
+      console.error('Erro na requisição:', err);
+      document.getElementById('modal-erro-msg').textContent = 'Erro de comunicação com o servidor.';
+      modalErro.show();
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Cadastrar Peça';
+    }
+  });
+
+  function fecharSucesso() {
+    modalSucesso.hide();
+  }
+</script>
+{% endblock %}
