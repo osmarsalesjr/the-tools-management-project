@@ -59,7 +59,7 @@ app/
 ### 1. Clonar o repositório
 
 ```
-git clone <url-do-repositorio>
+git clone https://github.com/osmarsalesjr/the-tools-management-project.git
 cd projeto
 cd app
 ```
