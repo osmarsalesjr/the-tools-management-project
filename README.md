@@ -87,7 +87,7 @@ source venv/bin/activate
 ### 4. Instalar dependências
 
 ```
-pip install -r app/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 5. Executar aplicação
