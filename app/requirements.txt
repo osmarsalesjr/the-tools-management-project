@@ -1,3 +1,4 @@
-json
-sqlite3
+# Framework Web
 Flask
+
+# json e sqlite ja fazem parte do python

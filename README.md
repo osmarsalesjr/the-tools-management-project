@@ -202,6 +202,13 @@ O sistema já inicializa com uma massa de dados para testes:
 
 ---
 
+## Artefatos
+
+* [Vídeo de Demonstração](https://drive.google.com/file/d/1PQVZ49eBXwEuGefnYrOtuSRycTGoRXLF/view?usp=sharing)
+* [Documentação e Discussões](./documentacao/analises_discussões.pdf)
+
+---
+
 ## 📄 Licença
 
 Projeto acadêmico / experimental.
